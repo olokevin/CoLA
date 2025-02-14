@@ -42,3 +42,69 @@ class ColaLayer(nn.Module):
         out = torch.matmul(out, self.cola_b)
 
         return out
+
+
+
+class ColaMDownProjLayer(nn.Module):
+    def __init__(
+        self,
+        in_features,
+        out_features,
+        rank,
+        bias=True,
+        lr_act=True,
+        lr_act_type="silu",
+    ):
+        super(ColaMDownProjLayer, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.rank = rank
+
+        if lr_act:
+            self.lr_act = ACT2FN[lr_act_type]
+
+        target_sdv = (in_features + out_features) ** (-1 / 2)
+        self.cola_a = nn.Parameter(
+            torch.randn(in_features, rank) / rank ** (1 / 4) * target_sdv ** (1 / 2)
+        )
+
+    def extra_repr(self):
+        return f"cola_a: {self.cola_a.shape}"
+
+    def forward(self, x):
+        out = torch.matmul(x, self.cola_a)
+
+        if hasattr(self, "lr_act"):
+            out = self.lr_act(out)
+
+        return out
+
+
+class ColaMUpProjLayer(nn.Module):
+    def __init__(
+        self,
+        in_features,
+        out_features,
+        rank,
+        bias=True,
+        lr_act=True,
+        lr_act_type="silu",
+    ):
+        super(ColaMUpProjLayer, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.rank = rank
+
+        target_sdv = (in_features + out_features) ** (-1 / 2)
+        self.cola_b = nn.Parameter(
+            torch.randn(rank, out_features) / rank ** (1 / 4) * target_sdv ** (1 / 2)
+        )
+
+    def extra_repr(self):
+        return f"cola_b: {self.cola_b.shape}"
+
+    def forward(self, x):
+        out = torch.matmul(x, self.cola_b)
+        return out

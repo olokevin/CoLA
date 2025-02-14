@@ -21,8 +21,9 @@ from tqdm import tqdm
 from loguru import logger
 from pretraining_utils import training_utils, args_utils
 from pretraining_utils.dataloader import PreprocessedIterableDataset
-from cola import ColaConfig, ColaForCausalLM
+from cola import ColaConfig, ColaForCausalLM, ColaMForCausalLM
 import datetime, pdb, pickle
+from torch.profiler import profile, ProfilerActivity
 
 transformers.logging.set_verbosity_error()
 
@@ -348,7 +349,10 @@ def main(args):
                 args.continue_from, torch_dtype=torch.bfloat16
             ).to(device=device)
         elif args.model_type.lower() == "cola_m":
-            raise NotImplementedError
+            model_config = ColaConfig.from_pretrained(args.continue_from)
+            model = ColaMForCausalLM.from_pretrained(
+                args.continue_from, torch_dtype=torch.bfloat16
+            ).to(device=device)
         else:
             model_config = AutoConfig.from_pretrained(args.continue_from)
             model = AutoModelForCausalLM.from_pretrained(
@@ -366,7 +370,8 @@ def main(args):
             model_config = ColaConfig.from_pretrained(args.model_config)
             model = ColaForCausalLM(model_config)
         elif args.model_type.lower() == "cola_m":
-            raise NotImplementedError
+            model_config = ColaConfig.from_pretrained(args.model_config)
+            model = ColaMForCausalLM(model_config)
         else:
             model_config = AutoConfig.from_pretrained(args.model_config)
             model = AutoModelForCausalLM.from_config(model_config)
@@ -507,7 +512,6 @@ def main(args):
     torch.cuda.reset_peak_memory_stats()
     # pdb.set_trace()
     for batch_idx, batch in enumerate(train_dataloader):
-
         if batch_idx // args.gradient_accumulation < update_step:
             # Skipping data that are already seen in previous steps
             continue
