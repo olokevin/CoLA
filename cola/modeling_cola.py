@@ -259,7 +259,6 @@ class ColaMLP(nn.Module):
             self.intermediate_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act=True,
             lr_act_type=config.hidden_act,
         )
         self.up_proj = ColaLayer(
@@ -267,7 +266,6 @@ class ColaMLP(nn.Module):
             self.intermediate_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
         self.down_proj = ColaLayer(
@@ -275,7 +273,6 @@ class ColaMLP(nn.Module):
             self.hidden_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
         self.only_lr_act = config.only_lr_act
@@ -339,7 +336,6 @@ class ColaAttention(nn.Module):
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
         self.k_proj = ColaLayer(
@@ -347,7 +343,6 @@ class ColaAttention(nn.Module):
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
         self.v_proj = ColaLayer(
@@ -355,7 +350,6 @@ class ColaAttention(nn.Module):
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
         self.o_proj = ColaLayer(
@@ -363,7 +357,6 @@ class ColaAttention(nn.Module):
             self.hidden_size,
             config.rank,
             bias=config.attention_bias,
-            lr_act=(not config.only_lr_act),
             lr_act_type=config.hidden_act,
         )
 
