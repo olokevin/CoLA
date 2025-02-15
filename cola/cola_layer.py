@@ -39,7 +39,7 @@ class ColaLayer(nn.Module):
 
     def extra_repr(self):
         return (
-            f"cola_a: {self.cola_a.shape}, cola_b: {self.cola_b.shape},"
+            f"cola_a: {self.cola_a.shape}, cola_b: {self.cola_b.shape}, "
             f"bias: {self.bias.shape if self.bias is not None else False}"
         )
 
