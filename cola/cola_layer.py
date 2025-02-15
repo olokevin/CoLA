@@ -30,8 +30,18 @@ class ColaLayer(nn.Module):
             torch.randn(rank, out_features) / rank ** (1 / 4) * target_sdv ** (1 / 2)
         )
 
+        if bias == False:
+            self.register_parameter("bias", None)
+        else:
+            stdv = 1.0 / out_features ** (1 / 2)
+            self.bias = torch.nn.Parameter(torch.randn(out_features))
+            self.bias.data.uniform_(-stdv, stdv)
+
     def extra_repr(self):
-        return f"cola_a: {self.cola_a.shape}, cola_b: {self.cola_b.shape}"
+        return (
+            f"cola_a: {self.cola_a.shape}, cola_b: {self.cola_b.shape},"
+            f"bias: {self.bias.shape if self.bias is not None else False}"
+        )
 
     def forward(self, x):
         out = torch.matmul(x, self.cola_a)
@@ -41,8 +51,10 @@ class ColaLayer(nn.Module):
 
         out = torch.matmul(out, self.cola_b)
 
-        return out
+        if self.bias is not None:
+            out += self.bias
 
+        return out
 
 
 class ColaMDownProjLayer(nn.Module):
@@ -101,10 +113,20 @@ class ColaMUpProjLayer(nn.Module):
         self.cola_b = nn.Parameter(
             torch.randn(rank, out_features) / rank ** (1 / 4) * target_sdv ** (1 / 2)
         )
+        if bias == False:
+            self.register_parameter("bias", None)
+        else:
+            stdv = 1.0 / out_features ** (1 / 2)
+            self.bias = torch.nn.Parameter(torch.randn(out_features))
+            self.bias.data.uniform_(-stdv, stdv)
 
     def extra_repr(self):
         return f"cola_b: {self.cola_b.shape}"
 
     def forward(self, x):
         out = torch.matmul(x, self.cola_b)
+
+        if self.bias is not None:
+            out += self.bias
+
         return out

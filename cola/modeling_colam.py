@@ -272,7 +272,7 @@ class CoLAMPreAttn(nn.Module):
         self.head_dim = getattr(config, "head_dim", self.hidden_size // self.num_heads)
         self.num_key_value_heads = config.num_key_value_heads
         self.num_key_value_groups = self.num_heads // self.num_key_value_heads
-        
+
         self.pre_q_proj = ColaMDownProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
@@ -330,7 +330,7 @@ class CoLAMSelfAttn(nn.Module):
         self.max_position_embeddings = config.max_position_embeddings
         self.rope_theta = config.rope_theta
         self.is_causal = True
-        
+
         self.post_q_proj = ColaMUpProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
@@ -359,7 +359,7 @@ class CoLAMSelfAttn(nn.Module):
             bias=False,
             lr_act_type=config.hidden_act,
         )
-        
+
         # TODO (joao): remove in v4.46 (RoPE is computed in the model, not in the decoder layers)
         self.rotary_emb = LlamaRotaryEmbedding(config=self.config)
 
@@ -387,7 +387,7 @@ class CoLAMSelfAttn(nn.Module):
             query_states = self.post_q_proj(query_states)
             key_states = self.post_k_proj(key_states)
             value_states = self.post_v_proj(value_states)
-        
+
         query_states = query_states.view(
             bsz, q_len, self.num_heads, self.head_dim
         ).transpose(1, 2)
@@ -418,7 +418,6 @@ class CoLAMSelfAttn(nn.Module):
             key_states, value_states = past_key_value.update(
                 key_states, value_states, self.layer_idx, cache_kwargs
             )
-
 
         key_states = repeat_kv(key_states, self.num_key_value_groups)
         value_states = repeat_kv(value_states, self.num_key_value_groups)
@@ -452,10 +451,10 @@ class CoLAMSelfAttn(nn.Module):
             raise NotImplementedError
         else:
             attn_output = self.pre_o_proj(attn_output)
-        
+
         if not output_attentions:
             attn_weights = None
-        
+
         return attn_output, attn_weights, past_key_value
 
 
@@ -730,7 +729,7 @@ class CoLAMPostAttn(nn.Module):
         self.hidden_size = config.hidden_size
         self.num_heads = config.num_attention_heads
         self.head_dim = getattr(config, "head_dim", self.hidden_size // self.num_heads)
-        
+
         self.intermediate_size = config.intermediate_size
 
         self.post_o_proj = ColaMUpProjLayer(
@@ -740,7 +739,7 @@ class CoLAMPostAttn(nn.Module):
             bias=config.attention_bias,
             lr_act_type=config.hidden_act,
         )
-    
+
     def forward(
         self,
         attn_output: torch.Tensor,
@@ -759,7 +758,7 @@ class CoLAMPreMLP(nn.Module):
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
-        
+
         self.pre_gate_proj = ColaMDownProjLayer(
             self.hidden_size,
             self.intermediate_size,
@@ -810,7 +809,7 @@ class CoLAMSelfMLP(nn.Module):
         self.only_lr_act = config.only_lr_act
         if not self.only_lr_act:
             self.act_fn = ACT2FN[config.hidden_act]
-        
+
         self.pre_down_proj = ColaMDownProjLayer(
             self.intermediate_size,
             self.hidden_size,
@@ -818,9 +817,9 @@ class CoLAMSelfMLP(nn.Module):
             bias=False,
             lr_act_type=config.hidden_act,
         )
-        
+
     def forward(
-        self, 
+        self,
         gate_proj: torch.Tensor,
         up_proj: torch.Tensor,
         **kwargs,
@@ -833,9 +832,9 @@ class CoLAMSelfMLP(nn.Module):
             if not self.only_lr_act:
                 gate_proj = self.act_fn(gate_proj)
             down_proj = gate_proj * up_proj
-        
+
             down_proj = self.pre_down_proj(down_proj)
-        
+
         return down_proj
 
 
@@ -845,7 +844,7 @@ class CoLAMPostMLP(nn.Module):
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
-        
+
         self.post_down_proj = ColaMUpProjLayer(
             self.intermediate_size,
             self.hidden_size,
@@ -853,9 +852,9 @@ class CoLAMPostMLP(nn.Module):
             bias=config.mlp_bias,
             lr_act_type=config.hidden_act,
         )
-        
+
     def forward(
-        self, 
+        self,
         down_proj: torch.Tensor,
         **kwargs,
     ) -> torch.Tensor:
@@ -863,7 +862,7 @@ class CoLAMPostMLP(nn.Module):
             raise NotImplementedError
         else:
             down_proj = self.post_down_proj(down_proj)
-        
+
         return down_proj
 
 
@@ -883,9 +882,9 @@ class ColaMDecoderLayer(nn.Module):
 
         if self.layer_idx != 0:
             self.last_layer_post_mlp = CoLAMPostMLP(config=config)
-        
+
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        
+
         self.pre_attn = CoLAMPreAttn(config=config)
         self.self_attn = LLAMA_ATTENTION_CLASSES[config._attn_implementation](
             config=config, layer_idx=layer_idx
@@ -895,12 +894,11 @@ class ColaMDecoderLayer(nn.Module):
         self.post_attention_layernorm = LlamaRMSNorm(
             config.hidden_size, eps=config.rms_norm_eps
         )
-        
+
         self.pre_mlp = CoLAMPreMLP(config=config)
         self.self_mlp = CoLAMSelfMLP(config=config)
         if self.layer_idx == self.config.num_hidden_layers - 1:
             self.post_mlp = CoLAMPostMLP(config=config)
-
 
     def forward(
         self,
@@ -942,18 +940,23 @@ class ColaMDecoderLayer(nn.Module):
                 into the model
         """
         if self.layer_idx == 0:
+
             def checkpoint_cola_layer1(hidden_states):
                 residual = hidden_states
                 hidden_states = self.input_layernorm(hidden_states)
                 query_states, key_states, value_states = self.pre_attn(hidden_states)
                 return query_states, key_states, value_states, residual
-            query_states, key_states, value_states, residual = torch.utils.checkpoint.checkpoint(
-                checkpoint_cola_layer1, 
-                hidden_states, 
-                preserve_rng_state=False, 
-                use_reentrant=True
+
+            query_states, key_states, value_states, residual = (
+                torch.utils.checkpoint.checkpoint(
+                    checkpoint_cola_layer1,
+                    hidden_states,
+                    preserve_rng_state=False,
+                    use_reentrant=True,
+                )
             )
         else:
+
             def checkpoint_cola_layer1(hidden_states, residual):
                 hidden_states = self.last_layer_post_mlp(hidden_states)
                 hidden_states += residual
@@ -961,30 +964,35 @@ class ColaMDecoderLayer(nn.Module):
                 hidden_states = self.input_layernorm(hidden_states)
                 query_states, key_states, value_states = self.pre_attn(hidden_states)
                 return query_states, key_states, value_states, residual
-            query_states, key_states, value_states, residual = torch.utils.checkpoint.checkpoint(
-                checkpoint_cola_layer1, 
-                hidden_states, 
-                residual, 
-                preserve_rng_state=False, 
-                use_reentrant=True
+
+            query_states, key_states, value_states, residual = (
+                torch.utils.checkpoint.checkpoint(
+                    checkpoint_cola_layer1,
+                    hidden_states,
+                    residual,
+                    preserve_rng_state=False,
+                    use_reentrant=True,
+                )
             )
-        
+
         # cola layer 2
-        hidden_states, self_attn_weights, present_key_value = torch.utils.checkpoint.checkpoint(
-            self.self_attn,
-            query_states, 
-            key_states, 
-            value_states,
-            attention_mask,
-            position_ids,
-            past_key_value,
-            output_attentions,
-            use_cache,
-            cache_position,
-            position_embeddings,
-            **kwargs,
-            preserve_rng_state=False, 
-            use_reentrant=True
+        hidden_states, self_attn_weights, present_key_value = (
+            torch.utils.checkpoint.checkpoint(
+                self.self_attn,
+                query_states,
+                key_states,
+                value_states,
+                attention_mask,
+                position_ids,
+                past_key_value,
+                output_attentions,
+                use_cache,
+                cache_position,
+                position_embeddings,
+                **kwargs,
+                preserve_rng_state=False,
+                use_reentrant=True,
+            )
         )
 
         def checkpoint_cola_layer3(hidden_states, residual):
@@ -994,30 +1002,39 @@ class ColaMDecoderLayer(nn.Module):
             hidden_states = self.post_attention_layernorm(hidden_states)
             gate_proj, up_proj = self.pre_mlp(hidden_states)
             return gate_proj, up_proj, residual
+
         gate_proj, up_proj, residual = torch.utils.checkpoint.checkpoint(
-            checkpoint_cola_layer3, 
-            hidden_states, 
-            residual, 
-            preserve_rng_state=False, 
-            use_reentrant=True
+            checkpoint_cola_layer3,
+            hidden_states,
+            residual,
+            preserve_rng_state=False,
+            use_reentrant=True,
         )
 
         # cola layer 4
         hidden_states = torch.utils.checkpoint.checkpoint(
-            self.self_mlp, 
-            gate_proj, 
-            up_proj, 
-            preserve_rng_state=False, 
-            use_reentrant=True
+            self.self_mlp,
+            gate_proj,
+            up_proj,
+            preserve_rng_state=False,
+            use_reentrant=True,
         )
 
         if self.layer_idx == self.config.num_hidden_layers - 1:
+
             def checkpoint_cola_layer5(hidden_states, residual):
                 hidden_states = self.post_mlp(hidden_states)
                 hidden_states += residual
                 return hidden_states
-            hidden_states = torch.utils.checkpoint.checkpoint(checkpoint_cola_layer5, hidden_states, residual, preserve_rng_state=False, use_reentrant=True)
-        
+
+            hidden_states = torch.utils.checkpoint.checkpoint(
+                checkpoint_cola_layer5,
+                hidden_states,
+                residual,
+                preserve_rng_state=False,
+                use_reentrant=True,
+            )
+
         outputs = (hidden_states,)
 
         if output_attentions:
