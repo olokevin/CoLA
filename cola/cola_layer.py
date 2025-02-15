@@ -121,7 +121,7 @@ class ColaMUpProjLayer(nn.Module):
             self.bias.data.uniform_(-stdv, stdv)
 
     def extra_repr(self):
-        return f"cola_b: {self.cola_b.shape}"
+        return f"cola_b: {self.cola_b.shape}, bias: {self.bias.shape if self.bias is not None else False}"
 
     def forward(self, x):
         out = torch.matmul(x, self.cola_b)
