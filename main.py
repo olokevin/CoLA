@@ -119,7 +119,6 @@ def evaluate_model(
     device,
     batch_size,
     dataloader=None,
-    probing=False,
 ):
     _time = time.time()
     if dataloader is None:
@@ -146,18 +145,12 @@ def evaluate_model(
             val_data_mapped, batch_size
         )
 
-    if probing:
-        target_eval_tokens = 1_000_000
-    else:
-        target_eval_tokens = 10_000_000
+    target_eval_tokens = 10_000_000
     evaluated_on_tokens = 0
     total_loss = torch.tensor(0.0).to(device)
     total_batches = 1
     if is_main_process():
         logger.info(f"Eval set prepared in {time.time() - _time:.2f} seconds")
-
-    if probing:
-        prob_in_list, prob_out_list = [], []
 
     for batch in (
         val_data_mapped.batch(batch_size=batch_size)
@@ -174,29 +167,19 @@ def evaluate_model(
         )
         batch["labels"][batch["labels"] == pad_idx] = -100
 
-        if probing:
-            prob_in, prob_out = model(**batch, probing=True)
-            prob_in_list.append(prob_in.detach().clone().float().cpu().numpy())
-            prob_out_list.append(prob_out.detach().clone().float().cpu().numpy())
-
-        else:
-            loss = model(**batch).loss
-            total_loss += loss.detach()
+        loss = model(**batch).loss
+        total_loss += loss.detach()
 
         evaluated_on_tokens += (batch["input_ids"] != pad_idx).sum().item() * world_size
 
-    if not probing:
-        total_loss = total_loss / total_batches
+    total_loss = total_loss / total_batches
 
-        # Gather losses across all GPUs
-        gathered_losses = [torch.zeros_like(total_loss) for _ in range(world_size)]
-        dist.all_gather(gathered_losses, total_loss)
-        total_loss = sum([t.item() for t in gathered_losses]) / world_size
+    # Gather losses across all GPUs
+    gathered_losses = [torch.zeros_like(total_loss) for _ in range(world_size)]
+    dist.all_gather(gathered_losses, total_loss)
+    total_loss = sum([t.item() for t in gathered_losses]) / world_size
 
-        return total_loss, evaluated_on_tokens
-    else:
-        return prob_in_list, prob_out_list
-
+    return total_loss, evaluated_on_tokens
 
 def main(args):
     torch.manual_seed(args.seed)
@@ -677,37 +660,33 @@ def main(args):
         )
         os.makedirs(args.save_dir, exist_ok=True)
 
-        if not args.probing:
-            model.module.save_pretrained(current_model_directory)
+        model.module.save_pretrained(current_model_directory)
 
-            optimizer_checkpoint = {
-                "optimizer": optimizer.state_dict(),
-                "scheduler": scheduler.state_dict(),
-                "update_step": update_step,
-                "global_step": global_step,
-                "config": run_config,
-                "wandb": wandb.run.dir,
-                "dtype": args.dtype,
-            }
-            torch.save(optimizer_checkpoint, f"{current_model_directory}/optimizer.pt")
+        optimizer_checkpoint = {
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+            "update_step": update_step,
+            "global_step": global_step,
+            "config": run_config,
+            "wandb": wandb.run.dir,
+            "dtype": args.dtype,
+        }
+        torch.save(optimizer_checkpoint, f"{current_model_directory}/optimizer.pt")
 
-            training_state_checkpoint = {
-                "global_step": global_step,
-                "update_step": update_step,
-                "tokens_seen": tokens_seen,
-                "tokens_seen_before": tokens_seen_before,
-                "update_time": update_time,
-            }
-            with open(f"{current_model_directory}/training_state.json", "w") as f:
-                json.dump(training_state_checkpoint, f, indent=4)
+        training_state_checkpoint = {
+            "global_step": global_step,
+            "update_step": update_step,
+            "tokens_seen": tokens_seen,
+            "tokens_seen_before": tokens_seen_before,
+            "update_time": update_time,
+        }
+        with open(f"{current_model_directory}/training_state.json", "w") as f:
+            json.dump(training_state_checkpoint, f, indent=4)
 
     # Final evaluation
     logger.info("Running final evaluation")
     model.eval()
-    if not args.probing:
-        del loss, optimizer, scheduler
-    else:
-        del optimizer, scheduler
+    del loss, optimizer, scheduler
     import gc
 
     gc.collect()
