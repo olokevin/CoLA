@@ -63,7 +63,6 @@ class ColaMDownProjLayer(nn.Module):
         in_features,
         out_features,
         rank,
-        bias=True,
         lr_act=True,
         lr_act_type="silu",
     ):
@@ -100,8 +99,6 @@ class ColaMUpProjLayer(nn.Module):
         out_features,
         rank,
         bias=True,
-        lr_act=True,
-        lr_act_type="silu",
     ):
         super(ColaMUpProjLayer, self).__init__()
 

@@ -277,21 +277,18 @@ class CoLAMPreAttn(nn.Module):
             self.hidden_size,
             self.num_heads * self.head_dim,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
         self.pre_k_proj = ColaMDownProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
         self.pre_v_proj = ColaMDownProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
 
@@ -336,27 +333,23 @@ class CoLAMSelfAttn(nn.Module):
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act_type=config.hidden_act,
         )
         self.post_k_proj = ColaMUpProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act_type=config.hidden_act,
         )
         self.post_v_proj = ColaMUpProjLayer(
             self.hidden_size,
             self.num_heads * self.head_dim,
             config.rank,
             bias=config.attention_bias,
-            lr_act_type=config.hidden_act,
         )
         self.pre_o_proj = ColaMDownProjLayer(
             self.num_heads * self.head_dim,
             self.hidden_size,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
 
@@ -737,7 +730,6 @@ class CoLAMPostAttn(nn.Module):
             self.hidden_size,
             config.rank,
             bias=config.attention_bias,
-            lr_act_type=config.hidden_act,
         )
 
     def forward(
@@ -763,14 +755,12 @@ class CoLAMPreMLP(nn.Module):
             self.hidden_size,
             self.intermediate_size,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
         self.pre_up_proj = ColaMDownProjLayer(
             self.hidden_size,
             self.intermediate_size,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
 
@@ -796,14 +786,12 @@ class CoLAMSelfMLP(nn.Module):
             self.intermediate_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act_type=config.hidden_act,
         )
         self.post_up_proj = ColaMUpProjLayer(
             self.hidden_size,
             self.intermediate_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act_type=config.hidden_act,
         )
 
         self.only_lr_act = config.only_lr_act
@@ -814,7 +802,6 @@ class CoLAMSelfMLP(nn.Module):
             self.intermediate_size,
             self.hidden_size,
             config.rank,
-            bias=False,
             lr_act_type=config.hidden_act,
         )
 
@@ -850,7 +837,6 @@ class CoLAMPostMLP(nn.Module):
             self.hidden_size,
             config.rank,
             bias=config.mlp_bias,
-            lr_act_type=config.hidden_act,
         )
 
     def forward(
