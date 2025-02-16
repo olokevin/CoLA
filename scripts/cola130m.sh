@@ -3,7 +3,6 @@ IFS=',' read -ra array <<< "$DEVICE"
 NGPU="${#array[@]}"
 PORT=$(($RANDOM + 10000))
 
-MODEL_TYPE=${MODEL_TYPE:-"cola"}
 RUN_NAME=${RUN_NAME:-"None"}
 CONFIG_NAME=${CONFIG_NAME:-"cola_130m"}
 LR=${LR:-"0.003"}
@@ -17,7 +16,7 @@ else
     readonly continue_from_flag=""
 fi
 
-RUN_NAME=$MODEL_TYPE-$CONFIG_NAME-LR-$LR
+RUN_NAME=cola-$CONFIG_NAME-LR-$LR
 TAG=${TAG:-"none"}
 if [ "${TAG}" != "none" ]; then
     RUN_NAME=$TAG-$RUN_NAME
@@ -32,7 +31,7 @@ if [ "${WU}" != "2000" ]; then
 fi
 
 CUDA_VISIBLE_DEVICES=$DEVICE torchrun --standalone --nproc-per-node=$NGPU --master-port=$PORT main.py \
-    --model_type $MODEL_TYPE \
+    --model_type cola \
     --model_config cola_configs/$CONFIG_NAME.json \
     --lr $LR \
     --optimizer adamw \
