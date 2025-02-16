@@ -51,7 +51,7 @@ def parse_args(args):
         "--model_type", type=str, default="cola", choices=["cola", "cola_m", "llama"]
     )
     parser.add_argument("--run_name", type=str, default=None)
-    parser.add_argument("--wandb_project", type=str, default="CoLA")
+    parser.add_argument("--wandb_project", type=str, default="cola")
     parser.add_argument("--model_config", type=str, required=True)
     parser.add_argument("--offline_mode", default=False, action="store_true")
     parser.add_argument("--continue_from", type=str, default=None)
