@@ -16,7 +16,7 @@ else
     readonly continue_from_flag=""
 fi
 
-RUN_NAME=cola-m-$CONFIG_NAME-LR-$LR
+RUN_NAME=$CONFIG_NAME-LR-$LR
 TAG=${TAG:-"none"}
 if [ "${TAG}" != "none" ]; then
     RUN_NAME=$TAG-$RUN_NAME
