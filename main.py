@@ -556,11 +556,20 @@ def main(args):
             if DEBUG:
                 model.train()
                 loss = model(**batch).loss
-                loss.backward()
+                scaled_loss = loss / args.gradient_accumulation
+                scaled_loss.backward()
+                
+                if batch_idx==0:
+                    for name, param in model.named_parameters():
+                        param.FO_grad = None
+                        param.ZO_grad = None
                 
                 for param in model.parameters():
                     if param.grad is not None:
-                        param.FO_grad = param.grad.clone()
+                        if param.FO_grad is None:
+                            param.FO_grad = param.grad.clone()
+                        else:
+                            param.FO_grad += param.grad.clone()
                 
                 optimizer.zero_grad()
             
@@ -603,32 +612,15 @@ def main(args):
             #     for bwd_pre_hook in bwd_pre_hook_list:
             #         bwd_pre_hook.remove()
             
-            ### logger.info param FO ZO grad
             if DEBUG:
-                # grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters()])
-                # grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters()])
-                grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.FO_grad is not None])
-                grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
-                cos_sim = F.cosine_similarity(grad_FO, grad_ZO, dim=0)
-                sign_match_ratio = (torch.sign(grad_FO) == torch.sign(grad_ZO)).float().mean()
-                logger.info(f'Modelwise cosine similarity: {cos_sim}')
-                logger.info(f'Modelwise norm ZO/FO {torch.linalg.norm(grad_ZO) / torch.linalg.norm(grad_FO)}')
-                logger.info(f'sign match ratio {sign_match_ratio}')
+                for param in model.parameters():
+                    if param.grad is not None:
+                        if param.ZO_grad is None:
+                            param.ZO_grad = param.grad.clone()
+                        else:
+                            param.ZO_grad += param.grad.clone() / args.gradient_accumulation
                 
-                
-                # logger.info('param cos sim')
-                # for name, param in model.named_parameters():
-                #     param.ZO_grad = param.grad.clone()
-                    
-                #     logger.info(f'{name} {F.cosine_similarity(param.FO_grad.view(-1), param.ZO_grad.view(-1), dim=0)}')
-                    
-                # logger.info('param Norm ZO/FO: ')
-                # for param in model.parameters():
-                #     logger.info(f'{torch.linalg.norm(param.ZO_grad.view(-1)) / torch.linalg.norm(param.FO_grad.view(-1))}')
-                
-                logger.info('done')
-                import sys
-                sys.exit(0)
+                optimizer.zero_grad()
         
         else:
             loss = model(**batch).loss
@@ -638,6 +630,37 @@ def main(args):
 
         if global_step % args.gradient_accumulation != 0:
             continue
+            
+        ### logger.info param FO ZO grad
+        if DEBUG:
+            # grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters()])
+            # grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters()])
+            grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.FO_grad is not None])
+            grad_ZO = torch.cat([param.ZO_grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.ZO_grad is not None])
+            cos_sim = F.cosine_similarity(grad_FO, grad_ZO, dim=0)
+            sign_match_ratio = (torch.sign(grad_FO) == torch.sign(grad_ZO)).float().mean()
+            logger.info(f'Modelwise cosine similarity: {cos_sim}')
+            logger.info(f'Modelwise norm ZO/FO {torch.linalg.norm(grad_ZO) / torch.linalg.norm(grad_FO)}')
+            logger.info(f'sign match ratio {sign_match_ratio}')
+            
+            # logger.info('param cos sim')
+            # for name, param in model.named_parameters():
+            #     param.ZO_grad = param.grad.clone()
+                
+            #     logger.info(f'{name} {F.cosine_similarity(param.FO_grad.view(-1), param.ZO_grad.view(-1), dim=0)}')
+                
+            # logger.info('param Norm ZO/FO: ')
+            # for param in model.parameters():
+            #     logger.info(f'{torch.linalg.norm(param.ZO_grad.view(-1)) / torch.linalg.norm(param.FO_grad.view(-1))}')
+            
+            for name, param in model.named_parameters():
+                if param.grad is not None:
+                    param.FO_grad = None
+                    param.ZO_grad = None
+            
+            logger.info('done')
+            import sys
+            sys.exit(0)
 
         #######
         if args.grad_clipping != 0.0:

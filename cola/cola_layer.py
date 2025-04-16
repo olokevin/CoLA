@@ -144,10 +144,20 @@ class ColaLayer(nn.Module):
             grad_cola_a = torch.einsum('bti,btr->ir', x, grad_h)
 
             # Manually assign the computed gradients to the parameters.
-            module.cola_a.grad = grad_cola_a
-            module.cola_b.grad = grad_cola_b
+            if module.cola_a.grad is None:
+                module.cola_a.grad = grad_cola_a
+            else:
+                module.cola_a.grad += grad_cola_a
+            if module.cola_b.grad is None:
+                module.cola_b.grad = grad_cola_b
+            else:
+                module.cola_b.grad += grad_cola_b
+            
             if module.bias is not None:
-                module.bias.grad = grad_bias
+                if module.bias.grad is None:
+                    module.bias.grad = grad_bias
+                else:
+                    module.bias.grad += grad_bias
 
             # Return the unchanged output.
             return output
