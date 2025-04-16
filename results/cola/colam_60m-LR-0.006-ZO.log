@@ -1,0 +1,300 @@
+W0416 21:13:41.058000 137337 torch/distributed/run.py:792] 
+W0416 21:13:41.058000 137337 torch/distributed/run.py:792] *****************************************
+W0416 21:13:41.058000 137337 torch/distributed/run.py:792] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0416 21:13:41.058000 137337 torch/distributed/run.py:792] *****************************************
+Starting script
+2025-04-16 21:13:48.727 | INFO     | __main__:main:201 - Global rank 0, local rank 0, device: 0
+2025-04-16 21:13:48.734 | INFO     | __main__:main:212 - Process group initialized
+2025-04-16 21:13:48.735 | INFO     | __main__:main:224 - 1-2-1280-640
+Starting script
+wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
+2025-04-16 21:13:48.931 | INFO     | __main__:main:201 - Global rank 1, local rank 1, device: 1
+2025-04-16 21:13:48.941 | INFO     | __main__:main:212 - Process group initialized
+wandb: Currently logged in as: yequan_zhao (yequan_zhao-university-of-california-santa-barbara) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.19.9
+wandb: Run data is saved locally in /workspace/wandb/run-20250416_211349-sas2otit
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run colam_60m-LR-0.006-ZO
+wandb: ⭐️ View project at https://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola
+wandb: 🚀 View run at https://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/sas2otit
+2025-04-16 21:13:49.919 | INFO     | __main__:main:250 - Using dist with rank 0 (only rank 0 will log)
+2025-04-16 21:13:49.920 | INFO     | __main__:main:251 - ****************************************
+2025-04-16 21:13:49.920 | INFO     | __main__:main:252 - Starting training with the arguments
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - model_type                     cola_m
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - run_name                       colam_60m-LR-0.006-ZO
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - wandb_project                  cola
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - model_config                   cola_configs/colam_60m.json
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - offline_mode                   False
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - continue_from                  None
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - batch_size                     640
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - gradient_accumulation          1
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - total_batch_size               1280
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - max_length                     256
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - optimizer                      adamw
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - lr                             0.006
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - scheduler                      cosine
+2025-04-16 21:13:49.920 | INFO     | __main__:main:254 - min_lr_ratio                   0.1
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - activation_checkpointing       False
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - weight_decay                   0.01
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - warmup_steps                   2000
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - eval_every                     1000
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - num_training_steps             10000
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - max_train_tokens               None
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - save_every                     10000
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - save_dir                       checkpoints/colam_60m-2025-04-16-21-13-48
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - tags                           None
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - dtype                          bfloat16
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - workers                        8
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - seed                           42
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - name                           test
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - grad_clipping                  0.5
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - beta1                          0.0
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - single_gpu                     False
+2025-04-16 21:13:49.921 | INFO     | __main__:main:254 - ZO_Estim                       True
+2025-04-16 21:13:49.921 | INFO     | __main__:main:255 - ****************************************
+2025-04-16 21:13:59.890 | INFO     | __main__:main:265 - Shuffling data with seed 42
+2025-04-16 21:14:01.080 | WARNING  | __main__:main:353 - Did not find training state in None, global step will start from zero
+2025-04-16 21:14:01.080 | INFO     | __main__:main:356 - ****************************************
+2025-04-16 21:14:01.862 | INFO     | __main__:main:462 - Running with cola_m
+
+2025-04-16 21:14:01.864 | INFO     | __main__:main:463 - 
+ColaMForCausalLM(
+  (model): ColaMModel(
+    (embed_tokens): Embedding(32000, 512, padding_idx=0)
+    (layers): ModuleList(
+      (0): ColaMDecoderLayer(
+        (input_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_attn): CoLAMPreAttn(
+          (pre_q_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_k_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_v_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_attn): ColaMSelfSdpaAttention(
+          (post_q_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_k_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_v_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (pre_o_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (post_attn): CoLAMPostAttn(
+          (post_o_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+        (post_attention_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_mlp): CoLAMPreMLP(
+          (pre_gate_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_up_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_mlp): CoLAMSelfMLP(
+          (post_gate_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (post_up_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (act_fn): SiLU()
+          (pre_down_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([1376, 128])
+            (lr_act): SiLU()
+          )
+        )
+      )
+      (1-6): 6 x ColaMDecoderLayer(
+        (last_layer_post_mlp): CoLAMPostMLP(
+          (post_down_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+        (input_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_attn): CoLAMPreAttn(
+          (pre_q_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_k_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_v_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_attn): ColaMSelfSdpaAttention(
+          (post_q_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_k_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_v_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (pre_o_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (post_attn): CoLAMPostAttn(
+          (post_o_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+        (post_attention_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_mlp): CoLAMPreMLP(
+          (pre_gate_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_up_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_mlp): CoLAMSelfMLP(
+          (post_gate_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (post_up_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (act_fn): SiLU()
+          (pre_down_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([1376, 128])
+            (lr_act): SiLU()
+          )
+        )
+      )
+      (7): ColaMDecoderLayer(
+        (last_layer_post_mlp): CoLAMPostMLP(
+          (post_down_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+        (input_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_attn): CoLAMPreAttn(
+          (pre_q_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_k_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_v_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_attn): ColaMSelfSdpaAttention(
+          (post_q_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_k_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (post_v_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+          (pre_o_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (post_attn): CoLAMPostAttn(
+          (post_o_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+        (post_attention_layernorm): LlamaRMSNorm((512,), eps=1e-06)
+        (pre_mlp): CoLAMPreMLP(
+          (pre_gate_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+          (pre_up_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([512, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (self_mlp): CoLAMSelfMLP(
+          (post_gate_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (post_up_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 1376]), bias: False)
+          (act_fn): SiLU()
+          (pre_down_proj): ColaMDownProjLayer(
+            cola_a: torch.Size([1376, 128])
+            (lr_act): SiLU()
+          )
+        )
+        (post_mlp): CoLAMPostMLP(
+          (post_down_proj): ColaMUpProjLayer(cola_b: torch.Size([128, 512]), bias: False)
+        )
+      )
+    )
+    (norm): LlamaRMSNorm((512,), eps=1e-06)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=512, out_features=32000, bias=False)
+)
+
+2025-04-16 21:14:01.865 | INFO     | __main__:main:464 - All params: 
+['model.embed_tokens.weight', 'model.layers.0.input_layernorm.weight', 'model.layers.0.pre_attn.pre_q_proj.cola_a', 'model.layers.0.pre_attn.pre_k_proj.cola_a', 'model.layers.0.pre_attn.pre_v_proj.cola_a', 'model.layers.0.self_attn.post_q_proj.cola_b', 'model.layers.0.self_attn.post_k_proj.cola_b', 'model.layers.0.self_attn.post_v_proj.cola_b', 'model.layers.0.self_attn.pre_o_proj.cola_a', 'model.layers.0.post_attn.post_o_proj.cola_b', 'model.layers.0.post_attention_layernorm.weight', 'model.layers.0.pre_mlp.pre_gate_proj.cola_a', 'model.layers.0.pre_mlp.pre_up_proj.cola_a', 'model.layers.0.self_mlp.post_gate_proj.cola_b', 'model.layers.0.self_mlp.post_up_proj.cola_b', 'model.layers.0.self_mlp.pre_down_proj.cola_a', 'model.layers.1.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.1.input_layernorm.weight', 'model.layers.1.pre_attn.pre_q_proj.cola_a', 'model.layers.1.pre_attn.pre_k_proj.cola_a', 'model.layers.1.pre_attn.pre_v_proj.cola_a', 'model.layers.1.self_attn.post_q_proj.cola_b', 'model.layers.1.self_attn.post_k_proj.cola_b', 'model.layers.1.self_attn.post_v_proj.cola_b', 'model.layers.1.self_attn.pre_o_proj.cola_a', 'model.layers.1.post_attn.post_o_proj.cola_b', 'model.layers.1.post_attention_layernorm.weight', 'model.layers.1.pre_mlp.pre_gate_proj.cola_a', 'model.layers.1.pre_mlp.pre_up_proj.cola_a', 'model.layers.1.self_mlp.post_gate_proj.cola_b', 'model.layers.1.self_mlp.post_up_proj.cola_b', 'model.layers.1.self_mlp.pre_down_proj.cola_a', 'model.layers.2.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.2.input_layernorm.weight', 'model.layers.2.pre_attn.pre_q_proj.cola_a', 'model.layers.2.pre_attn.pre_k_proj.cola_a', 'model.layers.2.pre_attn.pre_v_proj.cola_a', 'model.layers.2.self_attn.post_q_proj.cola_b', 'model.layers.2.self_attn.post_k_proj.cola_b', 'model.layers.2.self_attn.post_v_proj.cola_b', 'model.layers.2.self_attn.pre_o_proj.cola_a', 'model.layers.2.post_attn.post_o_proj.cola_b', 'model.layers.2.post_attention_layernorm.weight', 'model.layers.2.pre_mlp.pre_gate_proj.cola_a', 'model.layers.2.pre_mlp.pre_up_proj.cola_a', 'model.layers.2.self_mlp.post_gate_proj.cola_b', 'model.layers.2.self_mlp.post_up_proj.cola_b', 'model.layers.2.self_mlp.pre_down_proj.cola_a', 'model.layers.3.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.3.input_layernorm.weight', 'model.layers.3.pre_attn.pre_q_proj.cola_a', 'model.layers.3.pre_attn.pre_k_proj.cola_a', 'model.layers.3.pre_attn.pre_v_proj.cola_a', 'model.layers.3.self_attn.post_q_proj.cola_b', 'model.layers.3.self_attn.post_k_proj.cola_b', 'model.layers.3.self_attn.post_v_proj.cola_b', 'model.layers.3.self_attn.pre_o_proj.cola_a', 'model.layers.3.post_attn.post_o_proj.cola_b', 'model.layers.3.post_attention_layernorm.weight', 'model.layers.3.pre_mlp.pre_gate_proj.cola_a', 'model.layers.3.pre_mlp.pre_up_proj.cola_a', 'model.layers.3.self_mlp.post_gate_proj.cola_b', 'model.layers.3.self_mlp.post_up_proj.cola_b', 'model.layers.3.self_mlp.pre_down_proj.cola_a', 'model.layers.4.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.4.input_layernorm.weight', 'model.layers.4.pre_attn.pre_q_proj.cola_a', 'model.layers.4.pre_attn.pre_k_proj.cola_a', 'model.layers.4.pre_attn.pre_v_proj.cola_a', 'model.layers.4.self_attn.post_q_proj.cola_b', 'model.layers.4.self_attn.post_k_proj.cola_b', 'model.layers.4.self_attn.post_v_proj.cola_b', 'model.layers.4.self_attn.pre_o_proj.cola_a', 'model.layers.4.post_attn.post_o_proj.cola_b', 'model.layers.4.post_attention_layernorm.weight', 'model.layers.4.pre_mlp.pre_gate_proj.cola_a', 'model.layers.4.pre_mlp.pre_up_proj.cola_a', 'model.layers.4.self_mlp.post_gate_proj.cola_b', 'model.layers.4.self_mlp.post_up_proj.cola_b', 'model.layers.4.self_mlp.pre_down_proj.cola_a', 'model.layers.5.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.5.input_layernorm.weight', 'model.layers.5.pre_attn.pre_q_proj.cola_a', 'model.layers.5.pre_attn.pre_k_proj.cola_a', 'model.layers.5.pre_attn.pre_v_proj.cola_a', 'model.layers.5.self_attn.post_q_proj.cola_b', 'model.layers.5.self_attn.post_k_proj.cola_b', 'model.layers.5.self_attn.post_v_proj.cola_b', 'model.layers.5.self_attn.pre_o_proj.cola_a', 'model.layers.5.post_attn.post_o_proj.cola_b', 'model.layers.5.post_attention_layernorm.weight', 'model.layers.5.pre_mlp.pre_gate_proj.cola_a', 'model.layers.5.pre_mlp.pre_up_proj.cola_a', 'model.layers.5.self_mlp.post_gate_proj.cola_b', 'model.layers.5.self_mlp.post_up_proj.cola_b', 'model.layers.5.self_mlp.pre_down_proj.cola_a', 'model.layers.6.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.6.input_layernorm.weight', 'model.layers.6.pre_attn.pre_q_proj.cola_a', 'model.layers.6.pre_attn.pre_k_proj.cola_a', 'model.layers.6.pre_attn.pre_v_proj.cola_a', 'model.layers.6.self_attn.post_q_proj.cola_b', 'model.layers.6.self_attn.post_k_proj.cola_b', 'model.layers.6.self_attn.post_v_proj.cola_b', 'model.layers.6.self_attn.pre_o_proj.cola_a', 'model.layers.6.post_attn.post_o_proj.cola_b', 'model.layers.6.post_attention_layernorm.weight', 'model.layers.6.pre_mlp.pre_gate_proj.cola_a', 'model.layers.6.pre_mlp.pre_up_proj.cola_a', 'model.layers.6.self_mlp.post_gate_proj.cola_b', 'model.layers.6.self_mlp.post_up_proj.cola_b', 'model.layers.6.self_mlp.pre_down_proj.cola_a', 'model.layers.7.last_layer_post_mlp.post_down_proj.cola_b', 'model.layers.7.input_layernorm.weight', 'model.layers.7.pre_attn.pre_q_proj.cola_a', 'model.layers.7.pre_attn.pre_k_proj.cola_a', 'model.layers.7.pre_attn.pre_v_proj.cola_a', 'model.layers.7.self_attn.post_q_proj.cola_b', 'model.layers.7.self_attn.post_k_proj.cola_b', 'model.layers.7.self_attn.post_v_proj.cola_b', 'model.layers.7.self_attn.pre_o_proj.cola_a', 'model.layers.7.post_attn.post_o_proj.cola_b', 'model.layers.7.post_attention_layernorm.weight', 'model.layers.7.pre_mlp.pre_gate_proj.cola_a', 'model.layers.7.pre_mlp.pre_up_proj.cola_a', 'model.layers.7.self_mlp.post_gate_proj.cola_b', 'model.layers.7.self_mlp.post_up_proj.cola_b', 'model.layers.7.self_mlp.pre_down_proj.cola_a', 'model.layers.7.post_mlp.post_down_proj.cola_b', 'model.norm.weight', 'lm_head.weight']
+
+2025-04-16 21:14:01.866 | INFO     | __main__:main:467 - Total params: 42.77M
+2025-04-16 21:14:01.866 | INFO     | __main__:main:470 - Total non-low-rank parameters: 32.78M
+2025-04-16 21:14:01.867 | INFO     | __main__:main:475 - Total low-rank parameters: 9.99M
+2025-04-16 21:14:01.867 | INFO     | __main__:main:479 - Trainable params: 42.77M
+2025-04-16 21:14:01.867 | INFO     | __main__:main:482 - Saving model to checkpoints/colam_60m-2025-04-16-21-13-48 every 10000 update steps
+wandb: WARNING Saving files without folders. If you want to preserve subdirectories pass base_path to wandb.save, i.e. wandb.save("/mnt/folder/file.h5", base_path="/mnt")
+
+Update steps:   0%|                                   | 0/10000 [00:00<?, ?it/s]2025-04-16 21:14:04.105 | INFO     | __main__:main:525 - Maximum memory allocated before training: 173102592 bytes
+
+ZO_dimension= ZO_dimension=0 0
+
+/usr/local/lib/python3.10/dist-packages/torch/utils/checkpoint.py:87: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+  warnings.warn(
+/usr/local/lib/python3.10/dist-packages/torch/utils/checkpoint.py:87: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
+  warnings.warn(
+Traceback (most recent call last):
+  File "/workspace/main.py", line 842, in <module>
+    main(args)
+  File "/workspace/main.py", line 611, in main
+    grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
+RuntimeError: torch.cat(): expected a non-empty list of Tensors
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/workspace/main.py", line 842, in <module>
+[rank0]:     main(args)
+[rank0]:   File "/workspace/main.py", line 611, in main
+[rank0]:     grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
+[rank0]: RuntimeError: torch.cat(): expected a non-empty list of Tensors
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/workspace/main.py", line 842, in <module>
+[rank1]:     main(args)
+[rank1]:   File "/workspace/main.py", line 611, in main
+[rank1]:     grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
+[rank1]: RuntimeError: torch.cat(): expected a non-empty list of Tensors
+[1;34mwandb[0m: 
+[1;34mwandb[0m: 🚀 View run [33mcolam_60m-LR-0.006-ZO[0m at: [34mhttps://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/sas2otit[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20250416_211349-sas2otit/logs[0m
+W0416 21:14:16.481000 137337 torch/distributed/elastic/multiprocessing/api.py:897] Sending process 137431 closing signal SIGTERM
+E0416 21:14:16.947000 137337 torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 1 (pid: 137432) of binary: /usr/bin/python3
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/usr/local/lib/python3.10/dist-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/usr/local/lib/python3.10/dist-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.10/dist-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/usr/local/lib/python3.10/dist-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+main.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-04-16_21:14:16
+  host      : 51e7fcd279d0
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 137432)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

@@ -31,8 +31,8 @@ transformers.logging.set_verbosity_error()
 torch.backends.cuda.enable_mem_efficient_sdp(False)
 torch.backends.cuda.enable_flash_sdp(False)
 
-DEBUG=False
-# DEBUG=True
+# DEBUG=False
+DEBUG=True
 
 
 def get_rank():

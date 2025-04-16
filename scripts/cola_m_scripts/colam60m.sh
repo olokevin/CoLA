@@ -8,7 +8,8 @@ CONFIG_NAME=${CONFIG_NAME:-"colam_60m"}
 LR=${LR:-"0.006"}
 WD=${WD:-"0.01"}
 GC=${GC:-"0.5"}
-BZ=${BZ:-"256"}
+BZ=${BZ:-"640"}
+TBZ=${TBZ:-"1280"}
 CONTINUE=${CONTINUE:-"none"}
 if [ "${CONTINUE}" != "none" ]; then
     readonly continue_from_flag="--continue_from=$CONTINUE"
@@ -30,13 +31,15 @@ if [ "${WU}" != "2000" ]; then
     RUN_NAME=$RUN_NAME-WU-$WU
 fi
 
+RUN_NAME=$RUN_NAME-ZO
+
 CUDA_VISIBLE_DEVICES=$DEVICE torchrun --standalone --nproc-per-node=$NGPU --master-port=$PORT main.py \
     --model_type cola_m \
     --model_config cola_configs/$CONFIG_NAME.json \
     --lr $LR \
     --optimizer adamw \
     --batch_size $BZ \
-    --total_batch_size 512 \
+    --total_batch_size $TBZ \
     --num_training_steps $STEPS \
     --warmup_steps $WU \
     --weight_decay $WD \
@@ -44,4 +47,5 @@ CUDA_VISIBLE_DEVICES=$DEVICE torchrun --standalone --nproc-per-node=$NGPU --mast
     --eval_every 1000 \
     --grad_clipping $GC \
     --run_name $RUN_NAME \
-    > /results/cola/$RUN_NAME.log 2>&1 &
+    --ZO_Estim \
+    > results/cola/$RUN_NAME.log 2>&1 &

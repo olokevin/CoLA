@@ -8,7 +8,8 @@ CONFIG_NAME=${CONFIG_NAME:-"cola_60m"}
 LR=${LR:-"0.006"}
 WD=${WD:-"0.01"}
 GC=${GC:-"0.5"}
-BZ=${BZ:-"64"}
+BZ=${BZ:-"320"}
+TBZ=${TBZ:-"640"}
 CONTINUE=${CONTINUE:-"none"}
 if [ "${CONTINUE}" != "none" ]; then
     readonly continue_from_flag="--continue_from=$CONTINUE"
@@ -38,7 +39,7 @@ CUDA_VISIBLE_DEVICES=$DEVICE torchrun --standalone --nproc-per-node=$NGPU --mast
     --lr $LR \
     --optimizer adamw \
     --batch_size $BZ \
-    --total_batch_size 512 \
+    --total_batch_size $TBZ \
     --num_training_steps $STEPS \
     --warmup_steps $WU \
     --weight_decay $WD \
