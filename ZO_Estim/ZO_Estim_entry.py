@@ -43,8 +43,8 @@ def build_ZO_Estim(config, model):
             splited_layer_list = []
             
             for layer_name, layer in model.named_modules():
-                if type(layer) in (ColaLayer, nn.Embedding):
-                # if type(layer) in (ColaLayer,):
+                # if type(layer) in (ColaLayer, nn.Embedding):
+                if type(layer) in (ColaLayer,):
                     if all(param.requires_grad for param in layer.parameters()):
                         splited_layer_list.append(SplitedLayer(idx=-1, name=layer_name, layer=layer))
                             

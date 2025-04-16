@@ -31,8 +31,8 @@ transformers.logging.set_verbosity_error()
 torch.backends.cuda.enable_mem_efficient_sdp(False)
 torch.backends.cuda.enable_flash_sdp(False)
 
-# DEBUG=False
-DEBUG=True
+DEBUG=False
+# DEBUG=True
 
 
 def get_rank():
@@ -551,18 +551,11 @@ def main(args):
             # with torch.no_grad():
             #     loss = model(**batch).loss
             
-            obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
-            ZO_Estim.update_obj_fn(obj_fn)
-            
-            ### set dropout to eval mode
-            model.eval()
-            outputs, loss = ZO_Estim.estimate_grad()
-
             ### save param FO grad
             global DEBUG
             if DEBUG:
                 model.train()
-                outputs, loss = obj_fn()
+                loss = model(**batch).loss
                 loss.backward()
                 
                 for param in model.parameters():
@@ -570,6 +563,14 @@ def main(args):
                         param.FO_grad = param.grad.clone()
                 
                 optimizer.zero_grad()
+            
+            ### ZO grad estimation
+            obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+            ZO_Estim.update_obj_fn(obj_fn)
+            
+            ### set dropout to eval mode
+            model.eval()
+            outputs, loss = ZO_Estim.estimate_grad()
                 
             ### real NP (forward hook)
             # if ZO_Estim.splited_layer_list is not None:
@@ -589,25 +590,25 @@ def main(args):
             #         fwd_hook.remove()
             
             ### pseudo NP (backward hook)
-            if ZO_Estim.splited_layer_list is not None:
-                model.train()
-                bwd_pre_hook_list = []
-                for splited_layer in ZO_Estim.splited_layer_list:
-                    if splited_layer.mode == 'actv':
-                        create_bwd_pre_hook_ZO_grad = getattr(splited_layer.layer, 'create_bwd_pre_hook_ZO_grad', default_create_bwd_pre_hook_ZO_grad)
-                        bwd_pre_hook_list.append(splited_layer.layer.register_full_backward_pre_hook(create_bwd_pre_hook_ZO_grad(splited_layer.layer.ZO_grad_output, DEBUG)))
-                outputs, loss = obj_fn()
-                loss.backward()
+            # if ZO_Estim.splited_layer_list is not None:
+            #     model.train()
+            #     bwd_pre_hook_list = []
+            #     for splited_layer in ZO_Estim.splited_layer_list:
+            #         if splited_layer.mode == 'actv':
+            #             create_bwd_pre_hook_ZO_grad = getattr(splited_layer.layer, 'create_bwd_pre_hook_ZO_grad', default_create_bwd_pre_hook_ZO_grad)
+            #             bwd_pre_hook_list.append(splited_layer.layer.register_full_backward_pre_hook(create_bwd_pre_hook_ZO_grad(splited_layer.layer.ZO_grad_output, DEBUG)))
+            #     outputs, loss = obj_fn()
+            #     loss.backward()
                 
-                for bwd_pre_hook in bwd_pre_hook_list:
-                    bwd_pre_hook.remove()
+            #     for bwd_pre_hook in bwd_pre_hook_list:
+            #         bwd_pre_hook.remove()
             
             ### logger.info param FO ZO grad
             if DEBUG:
-                grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters()])
-                grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters()])
-                # grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
-                # grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
+                # grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters()])
+                # grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters()])
+                grad_FO = torch.cat([param.FO_grad.view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.FO_grad is not None])
+                grad_ZO = torch.cat([param.grad.clone().view(-1) for name, param in model.named_parameters() if 'cola_' in name and param.grad is not None])
                 cos_sim = F.cosine_similarity(grad_FO, grad_ZO, dim=0)
                 sign_match_ratio = (torch.sign(grad_FO) == torch.sign(grad_ZO)).float().mean()
                 logger.info(f'Modelwise cosine similarity: {cos_sim}')
