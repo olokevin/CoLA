@@ -1,0 +1,60 @@
+name: ZO_Estim_MC
+sigma: 0.01
+n_sample: 100
+signsgd: false
+
+scale: null
+# scale: sqrt_fim
+# scale: dim
+
+# ZO_trainable_layers_list: ['GCPBertSubLayer2', 'GCPBertSubLayer3', 'GCPBertSubLayer4', 'GCPBertSubLayer5']
+ZO_trainable_layers_list: ['GCPBertSubLayer1', 'GCPBertSubLayer2', 'GCPBertSubLayer3', 'GCPBertSubLayer4', 'GCPBertSubLayer5']
+
+estimate_method: forward
+sample_method: bernoulli
+
+quantized: false
+normalize_perturbation: false
+en_param_commit: false
+
+##### modelwise weight perturbation #####
+# actv_perturb_block_idx_list: null
+# param_perturb_block_idx_list: all
+
+# obj_fn_type: LM
+# en_layerwise_perturbation: false
+# en_partial_forward: false
+
+##### modelwise node perturbation #####
+actv_perturb_block_idx_list: all
+param_perturb_block_idx_list: null
+
+obj_fn_type: LM
+en_layerwise_perturbation: false
+en_partial_forward: false
+en_wp_np_mixture: false
+
+##### layerwise weight/node perturbation #####
+# actv_perturb_block_idx_list: all
+# param_perturb_block_idx_list: null
+
+# obj_fn_type: LM_layerwise
+# en_layerwise_perturbation: true
+# en_partial_forward: true
+# en_wp_np_mixture: true
+
+##### modelwise pseudo-ZO node perturbation #####
+# actv_perturb_block_idx_list: all
+# # actv_perturb_block_idx_list: [0,1,2,3,4]
+# param_perturb_block_idx_list: null
+
+# obj_fn_type: LM_layerwise
+# en_layerwise_perturbation: false
+# en_partial_forward: false
+# en_wp_np_mixture: false
+
+# en_pseudo_ZO: true
+# pzo_momentum: 0.99
+# pzo_detach_idx: -1
+
+# estimate_method: forward

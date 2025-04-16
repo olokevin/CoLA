@@ -55,6 +55,67 @@ class ColaLayer(nn.Module):
             out += self.bias
 
         return out
+    
+    def zo_np_create_forward_hook(self, ZO_grad_output):
+        """
+        Create a forward hook function that uses an externally provided
+        estimation of the layer's output gradient (grad_output_estimate)
+        and computes gradients for cola_a, cola_b, and bias manually.
+        """
+        def forward_hook(module, inputs, output):
+            # Retrieve the input, shape: [B, T, in_features]
+            x = inputs[0]
+            
+            # Recompute h = x @ cola_a, shape: [B, T, rank]
+            h = torch.matmul(x, module.cola_a)
+
+            # If an activation is applied, compute the activated output and its derivative.
+            if hasattr(module, "lr_act"):
+                h_act = module.lr_act(h)
+                # For SiLU (also known as swish), the derivative is:
+                # d/dh silu(h) = sigmoid(h) * (1 + h * (1 - sigmoid(h)))
+                if hasattr(module, "lr_act_type") and module.lr_act_type == "silu":
+                    sigmoid_h = torch.sigmoid(h)
+                    act_deriv = sigmoid_h * (1 + h * (1 - sigmoid_h))
+                else:
+                    # Default derivative for identity if unknown activation.
+                    act_deriv = torch.ones_like(h)
+            else:
+                h_act = h
+                act_deriv = torch.ones_like(h)
+
+            # Use the externally provided gradient for the output.
+            grad_out = ZO_grad_output  # shape: [B, T, out_features]
+
+            # === Compute Gradients via Einstein Summation (einsum) ===
+
+            # For cola_b:
+            # dL/dcola_b = sum_{b,t} [h_act[b,t].T * grad_out[b,t]]
+            grad_cola_b = torch.einsum('btr,bto->ro', h_act, grad_out)
+
+            # For bias:
+            # dL/dbias = sum_{b,t} grad_out[b,t]
+            grad_bias = grad_out.sum(dim=(0, 1)) if module.bias is not None else None
+
+            # For cola_a:
+            # First, backpropagate through the second matmul:
+            # grad_h_act = grad_out @ cola_b^T, shape: [B, T, rank]
+            grad_h_act = torch.matmul(grad_out, module.cola_b.transpose(0, 1))
+            # Then apply the derivative of the activation: element-wise multiplication.
+            grad_h = grad_h_act * act_deriv
+            # Finally, dL/dcola_a = sum_{b,t} [x[b,t].T * grad_h[b,t]]
+            grad_cola_a = torch.einsum('bti,btr->ir', x, grad_h)
+
+            # Manually assign the computed gradients to the parameters.
+            module.cola_a.grad = grad_cola_a
+            module.cola_b.grad = grad_cola_b
+            if module.bias is not None:
+                module.bias.grad = grad_bias
+
+            # Return the unchanged output.
+            return output
+
+        return forward_hook
 
 
 class ColaMDownProjLayer(nn.Module):
