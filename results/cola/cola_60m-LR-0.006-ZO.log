@@ -1,57 +1,58 @@
-W0416 22:05:07.056000 1085611 torch/distributed/run.py:792] 
-W0416 22:05:07.056000 1085611 torch/distributed/run.py:792] *****************************************
-W0416 22:05:07.056000 1085611 torch/distributed/run.py:792] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
-W0416 22:05:07.056000 1085611 torch/distributed/run.py:792] *****************************************
+W0423 23:41:18.827000 2037774 torch/distributed/run.py:792] 
+W0423 23:41:18.827000 2037774 torch/distributed/run.py:792] *****************************************
+W0423 23:41:18.827000 2037774 torch/distributed/run.py:792] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0423 23:41:18.827000 2037774 torch/distributed/run.py:792] *****************************************
 Starting script
-2025-04-16 22:05:12.806 | INFO     | __main__:main:201 - Global rank 0, local rank 0, device: 0
-2025-04-16 22:05:12.812 | INFO     | __main__:main:212 - Process group initialized
-2025-04-16 22:05:12.813 | INFO     | __main__:main:224 - 5-2-640-64
+Starting script
+2025-04-23 23:41:23.499 | INFO     | __main__:main:197 - Global rank 0, local rank 0, device: 0
+2025-04-23 23:41:23.506 | INFO     | __main__:main:208 - Process group initialized
+2025-04-23 23:41:23.506 | INFO     | __main__:main:220 - 1-2-64-32
 wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
-Starting script
-2025-04-16 22:05:12.914 | INFO     | __main__:main:201 - Global rank 1, local rank 1, device: 1
-2025-04-16 22:05:12.921 | INFO     | __main__:main:212 - Process group initialized
+2025-04-23 23:41:23.576 | INFO     | __main__:main:197 - Global rank 1, local rank 1, device: 1
+2025-04-23 23:41:23.583 | INFO     | __main__:main:208 - Process group initialized
 wandb: Currently logged in as: yequan_zhao (yequan_zhao-university-of-california-santa-barbara) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
 wandb: Tracking run with wandb version 0.19.9
-wandb: Run data is saved locally in /workspace/wandb/run-20250416_220513-yptx5bke
+wandb: Run data is saved locally in /workspace/wandb/run-20250423_234123-5h4pmqg6
 wandb: Run `wandb offline` to turn off syncing.
 wandb: Syncing run cola_60m-LR-0.006-ZO
 wandb: ⭐️ View project at https://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola
-wandb: 🚀 View run at https://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/yptx5bke
-2025-04-16 22:05:13.828 | INFO     | __main__:main:250 - Using dist with rank 0 (only rank 0 will log)
-2025-04-16 22:05:13.828 | INFO     | __main__:main:251 - ****************************************
-2025-04-16 22:05:13.828 | INFO     | __main__:main:252 - Starting training with the arguments
-2025-04-16 22:05:13.828 | INFO     | __main__:main:254 - model_type                     cola
-2025-04-16 22:05:13.828 | INFO     | __main__:main:254 - run_name                       cola_60m-LR-0.006-ZO
-2025-04-16 22:05:13.828 | INFO     | __main__:main:254 - wandb_project                  cola
-2025-04-16 22:05:13.828 | INFO     | __main__:main:254 - model_config                   cola_configs/cola_60m.json
-2025-04-16 22:05:13.828 | INFO     | __main__:main:254 - offline_mode                   False
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - continue_from                  None
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - batch_size                     64
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - gradient_accumulation          5
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - total_batch_size               640
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - max_length                     256
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - optimizer                      adamw
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - lr                             0.006
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - scheduler                      cosine
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - min_lr_ratio                   0.1
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - activation_checkpointing       False
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - weight_decay                   0.01
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - warmup_steps                   2000
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - eval_every                     1000
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - num_training_steps             10000
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - max_train_tokens               None
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - save_every                     10000
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - save_dir                       checkpoints/cola_60m-2025-04-16-22-05-12
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - tags                           None
-2025-04-16 22:05:13.829 | INFO     | __main__:main:254 - dtype                          bfloat16
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - workers                        8
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - seed                           42
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - name                           test
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - grad_clipping                  0.5
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - beta1                          0.0
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - single_gpu                     False
-2025-04-16 22:05:13.830 | INFO     | __main__:main:254 - ZO_Estim                       True
-2025-04-16 22:05:13.830 | INFO     | __main__:main:255 - ****************************************
+wandb: 🚀 View run at https://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/5h4pmqg6
+2025-04-23 23:41:24.625 | INFO     | __main__:main:246 - Using dist with rank 0 (only rank 0 will log)
+2025-04-23 23:41:24.625 | INFO     | __main__:main:247 - ****************************************
+2025-04-23 23:41:24.625 | INFO     | __main__:main:248 - Starting training with the arguments
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - model_type                     cola
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - run_name                       cola_60m-LR-0.006-ZO
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - wandb_project                  cola
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - model_config                   cola_configs/cola_60m.json
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - offline_mode                   False
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - continue_from                  None
+2025-04-23 23:41:24.625 | INFO     | __main__:main:250 - batch_size                     32
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - gradient_accumulation          1
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - total_batch_size               64
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - max_length                     256
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - optimizer                      adamw
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - lr                             0.006
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - scheduler                      cosine
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - min_lr_ratio                   0.1
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - activation_checkpointing       False
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - weight_decay                   0.01
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - warmup_steps                   2000
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - eval_every                     1000
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - num_training_steps             10000
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - max_train_tokens               None
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - save_every                     10000
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - save_dir                       checkpoints/cola_60m-2025-04-23-23-41-23
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - tags                           None
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - dtype                          bfloat16
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - workers                        8
+2025-04-23 23:41:24.626 | INFO     | __main__:main:250 - seed                           42
+2025-04-23 23:41:24.627 | INFO     | __main__:main:250 - name                           test
+2025-04-23 23:41:24.627 | INFO     | __main__:main:250 - grad_clipping                  0.5
+2025-04-23 23:41:24.627 | INFO     | __main__:main:250 - beta1                          0.0
+2025-04-23 23:41:24.627 | INFO     | __main__:main:250 - single_gpu                     False
+2025-04-23 23:41:24.627 | INFO     | __main__:main:250 - ZO_Estim                       True
+2025-04-23 23:41:24.627 | INFO     | __main__:main:251 - ****************************************
+2025-04-23 23:41:32.984 | INFO     | __main__:main:261 - Shuffling data with seed 42
 layer model.layers.0.self_attn.q_proj
 layer model.layers.0.self_attn.k_proj
 layer model.layers.0.self_attn.v_proj
@@ -108,9 +109,8 @@ layer model.layers.7.self_attn.o_proj
 layer model.layers.7.mlp.gate_proj
 layer model.layers.7.mlp.up_proj
 layer model.layers.7.mlp.down_proj
-2025-04-16 22:05:26.190 | INFO     | __main__:main:265 - Shuffling data with seed 42
-2025-04-16 22:05:26.890 | WARNING  | __main__:main:353 - Did not find training state in None, global step will start from zero
-2025-04-16 22:05:26.891 | INFO     | __main__:main:356 - ****************************************
+2025-04-23 23:41:33.771 | WARNING  | __main__:main:349 - Did not find training state in None, global step will start from zero
+2025-04-23 23:41:33.771 | INFO     | __main__:main:352 - ****************************************
 layer model.layers.0.self_attn.q_proj
 layer model.layers.0.self_attn.k_proj
 layer model.layers.0.self_attn.v_proj
@@ -167,9 +167,9 @@ layer model.layers.7.self_attn.o_proj
 layer model.layers.7.mlp.gate_proj
 layer model.layers.7.mlp.up_proj
 layer model.layers.7.mlp.down_proj
-2025-04-16 22:05:27.484 | INFO     | __main__:main:462 - Running with cola
+2025-04-23 23:41:34.353 | INFO     | __main__:main:458 - Running with cola
 
-2025-04-16 22:05:27.485 | INFO     | __main__:main:463 - 
+2025-04-23 23:41:34.354 | INFO     | __main__:main:459 - 
 ColaForCausalLM(
   (model): ColaModel(
     (embed_tokens): Embedding(32000, 512, padding_idx=0)
@@ -219,86 +219,86 @@ ColaForCausalLM(
   (lm_head): Linear(in_features=512, out_features=32000, bias=False)
 )
 
-2025-04-16 22:05:27.485 | INFO     | __main__:main:464 - All params: 
+2025-04-23 23:41:34.355 | INFO     | __main__:main:460 - All params: 
 ['model.embed_tokens.weight', 'model.layers.0.self_attn.q_proj.cola_a', 'model.layers.0.self_attn.q_proj.cola_b', 'model.layers.0.self_attn.k_proj.cola_a', 'model.layers.0.self_attn.k_proj.cola_b', 'model.layers.0.self_attn.v_proj.cola_a', 'model.layers.0.self_attn.v_proj.cola_b', 'model.layers.0.self_attn.o_proj.cola_a', 'model.layers.0.self_attn.o_proj.cola_b', 'model.layers.0.mlp.gate_proj.cola_a', 'model.layers.0.mlp.gate_proj.cola_b', 'model.layers.0.mlp.up_proj.cola_a', 'model.layers.0.mlp.up_proj.cola_b', 'model.layers.0.mlp.down_proj.cola_a', 'model.layers.0.mlp.down_proj.cola_b', 'model.layers.0.input_layernorm.weight', 'model.layers.0.post_attention_layernorm.weight', 'model.layers.1.self_attn.q_proj.cola_a', 'model.layers.1.self_attn.q_proj.cola_b', 'model.layers.1.self_attn.k_proj.cola_a', 'model.layers.1.self_attn.k_proj.cola_b', 'model.layers.1.self_attn.v_proj.cola_a', 'model.layers.1.self_attn.v_proj.cola_b', 'model.layers.1.self_attn.o_proj.cola_a', 'model.layers.1.self_attn.o_proj.cola_b', 'model.layers.1.mlp.gate_proj.cola_a', 'model.layers.1.mlp.gate_proj.cola_b', 'model.layers.1.mlp.up_proj.cola_a', 'model.layers.1.mlp.up_proj.cola_b', 'model.layers.1.mlp.down_proj.cola_a', 'model.layers.1.mlp.down_proj.cola_b', 'model.layers.1.input_layernorm.weight', 'model.layers.1.post_attention_layernorm.weight', 'model.layers.2.self_attn.q_proj.cola_a', 'model.layers.2.self_attn.q_proj.cola_b', 'model.layers.2.self_attn.k_proj.cola_a', 'model.layers.2.self_attn.k_proj.cola_b', 'model.layers.2.self_attn.v_proj.cola_a', 'model.layers.2.self_attn.v_proj.cola_b', 'model.layers.2.self_attn.o_proj.cola_a', 'model.layers.2.self_attn.o_proj.cola_b', 'model.layers.2.mlp.gate_proj.cola_a', 'model.layers.2.mlp.gate_proj.cola_b', 'model.layers.2.mlp.up_proj.cola_a', 'model.layers.2.mlp.up_proj.cola_b', 'model.layers.2.mlp.down_proj.cola_a', 'model.layers.2.mlp.down_proj.cola_b', 'model.layers.2.input_layernorm.weight', 'model.layers.2.post_attention_layernorm.weight', 'model.layers.3.self_attn.q_proj.cola_a', 'model.layers.3.self_attn.q_proj.cola_b', 'model.layers.3.self_attn.k_proj.cola_a', 'model.layers.3.self_attn.k_proj.cola_b', 'model.layers.3.self_attn.v_proj.cola_a', 'model.layers.3.self_attn.v_proj.cola_b', 'model.layers.3.self_attn.o_proj.cola_a', 'model.layers.3.self_attn.o_proj.cola_b', 'model.layers.3.mlp.gate_proj.cola_a', 'model.layers.3.mlp.gate_proj.cola_b', 'model.layers.3.mlp.up_proj.cola_a', 'model.layers.3.mlp.up_proj.cola_b', 'model.layers.3.mlp.down_proj.cola_a', 'model.layers.3.mlp.down_proj.cola_b', 'model.layers.3.input_layernorm.weight', 'model.layers.3.post_attention_layernorm.weight', 'model.layers.4.self_attn.q_proj.cola_a', 'model.layers.4.self_attn.q_proj.cola_b', 'model.layers.4.self_attn.k_proj.cola_a', 'model.layers.4.self_attn.k_proj.cola_b', 'model.layers.4.self_attn.v_proj.cola_a', 'model.layers.4.self_attn.v_proj.cola_b', 'model.layers.4.self_attn.o_proj.cola_a', 'model.layers.4.self_attn.o_proj.cola_b', 'model.layers.4.mlp.gate_proj.cola_a', 'model.layers.4.mlp.gate_proj.cola_b', 'model.layers.4.mlp.up_proj.cola_a', 'model.layers.4.mlp.up_proj.cola_b', 'model.layers.4.mlp.down_proj.cola_a', 'model.layers.4.mlp.down_proj.cola_b', 'model.layers.4.input_layernorm.weight', 'model.layers.4.post_attention_layernorm.weight', 'model.layers.5.self_attn.q_proj.cola_a', 'model.layers.5.self_attn.q_proj.cola_b', 'model.layers.5.self_attn.k_proj.cola_a', 'model.layers.5.self_attn.k_proj.cola_b', 'model.layers.5.self_attn.v_proj.cola_a', 'model.layers.5.self_attn.v_proj.cola_b', 'model.layers.5.self_attn.o_proj.cola_a', 'model.layers.5.self_attn.o_proj.cola_b', 'model.layers.5.mlp.gate_proj.cola_a', 'model.layers.5.mlp.gate_proj.cola_b', 'model.layers.5.mlp.up_proj.cola_a', 'model.layers.5.mlp.up_proj.cola_b', 'model.layers.5.mlp.down_proj.cola_a', 'model.layers.5.mlp.down_proj.cola_b', 'model.layers.5.input_layernorm.weight', 'model.layers.5.post_attention_layernorm.weight', 'model.layers.6.self_attn.q_proj.cola_a', 'model.layers.6.self_attn.q_proj.cola_b', 'model.layers.6.self_attn.k_proj.cola_a', 'model.layers.6.self_attn.k_proj.cola_b', 'model.layers.6.self_attn.v_proj.cola_a', 'model.layers.6.self_attn.v_proj.cola_b', 'model.layers.6.self_attn.o_proj.cola_a', 'model.layers.6.self_attn.o_proj.cola_b', 'model.layers.6.mlp.gate_proj.cola_a', 'model.layers.6.mlp.gate_proj.cola_b', 'model.layers.6.mlp.up_proj.cola_a', 'model.layers.6.mlp.up_proj.cola_b', 'model.layers.6.mlp.down_proj.cola_a', 'model.layers.6.mlp.down_proj.cola_b', 'model.layers.6.input_layernorm.weight', 'model.layers.6.post_attention_layernorm.weight', 'model.layers.7.self_attn.q_proj.cola_a', 'model.layers.7.self_attn.q_proj.cola_b', 'model.layers.7.self_attn.k_proj.cola_a', 'model.layers.7.self_attn.k_proj.cola_b', 'model.layers.7.self_attn.v_proj.cola_a', 'model.layers.7.self_attn.v_proj.cola_b', 'model.layers.7.self_attn.o_proj.cola_a', 'model.layers.7.self_attn.o_proj.cola_b', 'model.layers.7.mlp.gate_proj.cola_a', 'model.layers.7.mlp.gate_proj.cola_b', 'model.layers.7.mlp.up_proj.cola_a', 'model.layers.7.mlp.up_proj.cola_b', 'model.layers.7.mlp.down_proj.cola_a', 'model.layers.7.mlp.down_proj.cola_b', 'model.layers.7.input_layernorm.weight', 'model.layers.7.post_attention_layernorm.weight', 'model.norm.weight', 'lm_head.weight']
 
-2025-04-16 22:05:27.485 | INFO     | __main__:main:467 - Total params: 42.77M
-2025-04-16 22:05:27.486 | INFO     | __main__:main:470 - Total non-low-rank parameters: 32.78M
-2025-04-16 22:05:27.486 | INFO     | __main__:main:475 - Total low-rank parameters: 9.99M
-2025-04-16 22:05:27.486 | INFO     | __main__:main:479 - Trainable params: 42.77M
-2025-04-16 22:05:27.486 | INFO     | __main__:main:482 - Saving model to checkpoints/cola_60m-2025-04-16-22-05-12 every 10000 update steps
+2025-04-23 23:41:34.355 | INFO     | __main__:main:463 - Total params: 42.77M
+2025-04-23 23:41:34.355 | INFO     | __main__:main:466 - Total non-low-rank parameters: 32.78M
+2025-04-23 23:41:34.356 | INFO     | __main__:main:471 - Total low-rank parameters: 9.99M
+2025-04-23 23:41:34.356 | INFO     | __main__:main:475 - Trainable params: 42.77M
+2025-04-23 23:41:34.356 | INFO     | __main__:main:478 - Saving model to checkpoints/cola_60m-2025-04-23-23-41-23 every 10000 update steps
 wandb: WARNING Saving files without folders. If you want to preserve subdirectories pass base_path to wandb.save, i.e. wandb.save("/mnt/folder/file.h5", base_path="/mnt")
-Update steps:   0%|                                   | 0/10000 [00:00<?, ?it/s]2025-04-16 22:05:27.738 | INFO     | __main__:main:525 - Maximum memory allocated before training: 173102592 bytes
+Update steps:   0%|                                   | 0/10000 [00:00<?, ?it/s]2025-04-23 23:41:34.608 | INFO     | __main__:main:527 - Maximum memory allocated before training: 173102592 bytes
 
-model.layers.0.self_attn.q_proj out_dimension=131072.0
+model.layers.0.self_attn.q_proj out_dimension=131072.0model.layers.0.self_attn.q_proj out_dimension=131072.0
 model.layers.0.self_attn.k_proj out_dimension=131072.0
 model.layers.0.self_attn.v_proj out_dimension=131072.0
 model.layers.0.self_attn.o_proj out_dimension=131072.0
 model.layers.0.mlp.gate_proj out_dimension=352256.0
+
 model.layers.0.mlp.up_proj out_dimension=352256.0
 model.layers.0.mlp.down_proj out_dimension=131072.0
 model.layers.1.self_attn.q_proj out_dimension=131072.0
-model.layers.1.self_attn.k_proj out_dimension=131072.0
+model.layers.1.self_attn.k_proj out_dimension=131072.0model.layers.0.self_attn.k_proj out_dimension=131072.0
 model.layers.1.self_attn.v_proj out_dimension=131072.0
 model.layers.1.self_attn.o_proj out_dimension=131072.0
+
 model.layers.1.mlp.gate_proj out_dimension=352256.0
 model.layers.1.mlp.up_proj out_dimension=352256.0
 model.layers.1.mlp.down_proj out_dimension=131072.0
-model.layers.0.self_attn.q_proj out_dimension=131072.0model.layers.2.self_attn.q_proj out_dimension=131072.0
+model.layers.0.self_attn.v_proj out_dimension=131072.0model.layers.2.self_attn.q_proj out_dimension=131072.0
 model.layers.2.self_attn.k_proj out_dimension=131072.0
 model.layers.2.self_attn.v_proj out_dimension=131072.0
+
 model.layers.2.self_attn.o_proj out_dimension=131072.0
 model.layers.2.mlp.gate_proj out_dimension=352256.0
-model.layers.2.mlp.up_proj out_dimension=352256.0
+model.layers.0.self_attn.o_proj out_dimension=131072.0model.layers.2.mlp.up_proj out_dimension=352256.0
 model.layers.2.mlp.down_proj out_dimension=131072.0
+
 model.layers.3.self_attn.q_proj out_dimension=131072.0
 model.layers.3.self_attn.k_proj out_dimension=131072.0
-model.layers.3.self_attn.v_proj out_dimension=131072.0
+model.layers.3.self_attn.v_proj out_dimension=131072.0model.layers.0.mlp.gate_proj out_dimension=352256.0
 model.layers.3.self_attn.o_proj out_dimension=131072.0
 model.layers.3.mlp.gate_proj out_dimension=352256.0
+
 model.layers.3.mlp.up_proj out_dimension=352256.0
 model.layers.3.mlp.down_proj out_dimension=131072.0
-model.layers.4.self_attn.q_proj out_dimension=131072.0
+model.layers.0.mlp.up_proj out_dimension=352256.0model.layers.4.self_attn.q_proj out_dimension=131072.0
 model.layers.4.self_attn.k_proj out_dimension=131072.0
+
 model.layers.4.self_attn.v_proj out_dimension=131072.0
 model.layers.4.self_attn.o_proj out_dimension=131072.0
-model.layers.4.mlp.gate_proj out_dimension=352256.0
+model.layers.4.mlp.gate_proj out_dimension=352256.0model.layers.0.mlp.down_proj out_dimension=131072.0
 model.layers.4.mlp.up_proj out_dimension=352256.0
 model.layers.4.mlp.down_proj out_dimension=131072.0
+
 model.layers.5.self_attn.q_proj out_dimension=131072.0
 model.layers.5.self_attn.k_proj out_dimension=131072.0
 model.layers.5.self_attn.v_proj out_dimension=131072.0
-model.layers.5.self_attn.o_proj out_dimension=131072.0
+model.layers.1.self_attn.q_proj out_dimension=131072.0model.layers.5.self_attn.o_proj out_dimension=131072.0
 model.layers.5.mlp.gate_proj out_dimension=352256.0
 model.layers.5.mlp.up_proj out_dimension=352256.0
+
 model.layers.5.mlp.down_proj out_dimension=131072.0
 model.layers.6.self_attn.q_proj out_dimension=131072.0
-model.layers.6.self_attn.k_proj out_dimension=131072.0
+model.layers.1.self_attn.k_proj out_dimension=131072.0model.layers.6.self_attn.k_proj out_dimension=131072.0
 model.layers.6.self_attn.v_proj out_dimension=131072.0
-
 model.layers.6.self_attn.o_proj out_dimension=131072.0
+
 model.layers.6.mlp.gate_proj out_dimension=352256.0
 model.layers.6.mlp.up_proj out_dimension=352256.0
-model.layers.6.mlp.down_proj out_dimension=131072.0
+model.layers.1.self_attn.v_proj out_dimension=131072.0model.layers.6.mlp.down_proj out_dimension=131072.0
 model.layers.7.self_attn.q_proj out_dimension=131072.0
-model.layers.0.self_attn.k_proj out_dimension=131072.0model.layers.7.self_attn.k_proj out_dimension=131072.0
+model.layers.7.self_attn.k_proj out_dimension=131072.0
+
 model.layers.7.self_attn.v_proj out_dimension=131072.0
 model.layers.7.self_attn.o_proj out_dimension=131072.0
-
-model.layers.7.mlp.gate_proj out_dimension=352256.0
+model.layers.1.self_attn.o_proj out_dimension=131072.0model.layers.7.mlp.gate_proj out_dimension=352256.0
 model.layers.7.mlp.up_proj out_dimension=352256.0
 model.layers.7.mlp.down_proj out_dimension=131072.0
-model.layers.0.self_attn.v_proj out_dimension=131072.0ZO_dimension=
+
+model.layers.1.mlp.gate_proj out_dimension=352256.0ZO_dimension=
  10878976
-model.layers.0.self_attn.o_proj out_dimension=131072.0
-model.layers.0.mlp.gate_proj out_dimension=352256.0
-model.layers.0.mlp.up_proj out_dimension=352256.0
-model.layers.0.mlp.down_proj out_dimension=131072.0
-model.layers.1.self_attn.q_proj out_dimension=131072.0
-model.layers.1.self_attn.k_proj out_dimension=131072.0
-model.layers.1.self_attn.v_proj out_dimension=131072.0
-model.layers.1.self_attn.o_proj out_dimension=131072.0
-model.layers.1.mlp.gate_proj out_dimension=352256.0
 model.layers.1.mlp.up_proj out_dimension=352256.0
 model.layers.1.mlp.down_proj out_dimension=131072.0
 model.layers.2.self_attn.q_proj out_dimension=131072.0
@@ -344,12 +344,11 @@ model.layers.7.mlp.gate_proj out_dimension=352256.0
 model.layers.7.mlp.up_proj out_dimension=352256.0
 model.layers.7.mlp.down_proj out_dimension=131072.0
 ZO_dimension= 10878976
-2025-04-16 22:07:08.137 | INFO     | __main__:main:642 - Modelwise cosine similarity: 0.10791015625
-2025-04-16 22:07:08.138 | INFO     | __main__:main:643 - Modelwise norm ZO/FO 4.59375
-2025-04-16 22:07:08.138 | INFO     | __main__:main:644 - sign match ratio 0.5556819438934326
-2025-04-16 22:07:08.139 | INFO     | __main__:main:661 - done
-Update steps:   0%|                                   | 0/10000 [01:40<?, ?it/s]
+2025-04-23 23:43:29.512 | INFO     | __main__:main:703 - Modelwise cosine similarity: 0.1162109375
+2025-04-23 23:43:29.513 | INFO     | __main__:main:704 - Modelwise norm ZO/FO 1.8671875
+2025-04-23 23:43:29.513 | INFO     | __main__:main:705 - sign match ratio 0.5579766035079956
+2025-04-23 23:43:29.513 | INFO     | __main__:main:722 - done
+Update steps:   0%|                                   | 0/10000 [01:55<?, ?it/s]
 [1;34mwandb[0m: 
-[1;34mwandb[0m: 🚀 View run [33mcola_60m-LR-0.006-ZO[0m at: [34mhttps://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/yptx5bke[0m
-[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20250416_220513-yptx5bke/logs[0m
-[rank0]:[W416 22:07:09.948190580 ProcessGroupNCCL.cpp:1496] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())
+[1;34mwandb[0m: 🚀 View run [33mcola_60m-LR-0.006-ZO[0m at: [34mhttps://wandb.ai/yequan_zhao-university-of-california-santa-barbara/cola/runs/5h4pmqg6[0m
+[1;34mwandb[0m: Find logs at: [1;35mwandb/run-20250423_234123-5h4pmqg6/logs[0m

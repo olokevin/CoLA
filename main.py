@@ -31,10 +31,6 @@ transformers.logging.set_verbosity_error()
 torch.backends.cuda.enable_mem_efficient_sdp(False)
 torch.backends.cuda.enable_flash_sdp(False)
 
-# DEBUG=False
-DEBUG=True
-
-
 def get_rank():
     if not dist.is_available():
         return 0
@@ -519,6 +515,12 @@ def main(args):
     # ##############################
     # TRAINING LOOP
     # ##############################
+    
+    # DEBUG=False
+    DEBUG=True
+
+    OUT_GRAD_DEBUG=False
+    # OUT_GRAD_DEBUG=True
 
     max_memory = torch.cuda.max_memory_allocated()
     if global_rank == 0:
@@ -552,7 +554,6 @@ def main(args):
             #     loss = model(**batch).loss
             
             ### save param FO grad
-            global DEBUG
             if DEBUG:
                 model.train()
                 loss = model(**batch).loss
@@ -573,54 +574,108 @@ def main(args):
                 
                 optimizer.zero_grad()
             
-            ### ZO grad estimation
-            obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
-            ZO_Estim.update_obj_fn(obj_fn)
-            
-            ### set dropout to eval mode
-            model.eval()
-            outputs, loss = ZO_Estim.estimate_grad()
+                ### ZO grad estimation
+                obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+                ZO_Estim.update_obj_fn(obj_fn)
                 
-            ### real NP (forward hook)
-            # if ZO_Estim.splited_layer_list is not None:
-            #     fwd_hook_list = []
-            #     for splited_layer in ZO_Estim.splited_layer_list:
-            #         if splited_layer.mode == 'actv':
-            #             zo_np_create_forward_hook = getattr(splited_layer.layer, 'zo_np_create_forward_hook', None)
-            #             if zo_np_create_forward_hook is None:
-            #                 print(f'skip {splited_layer.name}')
-            #             else:
-            #                 fwd_hook_list.append(splited_layer.layer.register_forward_hook(zo_np_create_forward_hook(splited_layer.layer.ZO_grad_output)))
-                
-            #     with torch.no_grad():
-            #         outputs, loss = obj_fn()
-                
-            #     for fwd_hook in fwd_hook_list:
-            #         fwd_hook.remove()
-            
-            ### pseudo NP (backward hook)
-            # if ZO_Estim.splited_layer_list is not None:
-            #     model.train()
-            #     bwd_pre_hook_list = []
-            #     for splited_layer in ZO_Estim.splited_layer_list:
-            #         if splited_layer.mode == 'actv':
-            #             create_bwd_pre_hook_ZO_grad = getattr(splited_layer.layer, 'create_bwd_pre_hook_ZO_grad', default_create_bwd_pre_hook_ZO_grad)
-            #             bwd_pre_hook_list.append(splited_layer.layer.register_full_backward_pre_hook(create_bwd_pre_hook_ZO_grad(splited_layer.layer.ZO_grad_output, DEBUG)))
-            #     outputs, loss = obj_fn()
-            #     loss.backward()
-                
-            #     for bwd_pre_hook in bwd_pre_hook_list:
-            #         bwd_pre_hook.remove()
-            
-            if DEBUG:
+                ### set dropout to eval mode
+                model.eval()
+                outputs, loss = ZO_Estim.estimate_grad()
+
+                ### save ZO grad
                 for param in model.parameters():
                     if param.grad is not None:
                         if param.ZO_grad is None:
-                            param.ZO_grad = param.grad.clone()
+                            param.ZO_grad = param.grad.clone() / args.gradient_accumulation
                         else:
                             param.ZO_grad += param.grad.clone() / args.gradient_accumulation
                 
                 optimizer.zero_grad()
+                
+            elif OUT_GRAD_DEBUG:
+                ### ZO grad estimation
+                if batch_idx % 1000 == 0:
+                    obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+                    ZO_Estim.update_obj_fn(obj_fn)
+                    
+                    ### set dropout to eval mode
+                    model.eval()
+                    outputs, loss = ZO_Estim.estimate_grad()
+                    
+                    optimizer.zero_grad()
+
+                    ### save out_value and out_grad
+                    from ZO_Estim.ZO_utils import fwd_hook_save_value, bwd_hook_save_grad
+                    hook_list = []
+                    for splited_layer in ZO_Estim.splited_layer_list:
+                        if splited_layer.mode == 'actv':
+                            hook_list.append(splited_layer.layer.register_forward_hook(fwd_hook_save_value))
+                            hook_list.append(splited_layer.layer.register_full_backward_hook(bwd_hook_save_grad))
+                
+                model.train()
+                loss = model(**batch).loss
+                scaled_loss = loss / args.gradient_accumulation
+                scaled_loss.backward()
+                
+                ### save statistics
+                if batch_idx % 1000 == 0:
+                    dir_path = f'test/{ZO_Estim.n_sample}/{os.getpid()}/{batch_idx}'
+                    os.makedirs(dir_path, exist_ok=True)
+                    for splited_layer in ZO_Estim.splited_layer_list:
+                        if splited_layer.mode == 'actv':
+                            # Create directory if it doesn't exist
+                            
+                            fname = splited_layer.name.replace('.', '_') + '.pt'
+                            path = os.path.join(dir_path, fname)
+                            torch.save({
+                                'name': splited_layer.name,
+                                'output': splited_layer.layer.out_value,
+                                'FO_grad': splited_layer.layer.out_grad,
+                                'ZO_grad': splited_layer.layer.ZO_grad_output,
+                            }, path)
+                    
+                    for hook in hook_list:
+                        hook.remove()
+            
+            else:
+                ### ZO grad estimation
+                obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+                ZO_Estim.update_obj_fn(obj_fn)
+                
+                ### set dropout to eval mode
+                model.eval()
+                outputs, loss = ZO_Estim.estimate_grad()
+                    
+                ### real NP (forward hook)
+                # if ZO_Estim.splited_layer_list is not None:
+                #     fwd_hook_list = []
+                #     for splited_layer in ZO_Estim.splited_layer_list:
+                #         if splited_layer.mode == 'actv':
+                #             zo_np_create_forward_hook = getattr(splited_layer.layer, 'zo_np_create_forward_hook', None)
+                #             if zo_np_create_forward_hook is None:
+                #                 print(f'skip {splited_layer.name}')
+                #             else:
+                #                 fwd_hook_list.append(splited_layer.layer.register_forward_hook(zo_np_create_forward_hook(splited_layer.layer.ZO_grad_output)))
+                    
+                #     with torch.no_grad():
+                #         outputs, loss = obj_fn()
+                    
+                #     for fwd_hook in fwd_hook_list:
+                #         fwd_hook.remove()
+                
+                ### pseudo NP (backward hook)
+                # if ZO_Estim.splited_layer_list is not None:
+                #     model.train()
+                #     bwd_pre_hook_list = []
+                #     for splited_layer in ZO_Estim.splited_layer_list:
+                #         if splited_layer.mode == 'actv':
+                #             create_bwd_pre_hook_ZO_grad = getattr(splited_layer.layer, 'create_bwd_pre_hook_ZO_grad', default_create_bwd_pre_hook_ZO_grad)
+                #             bwd_pre_hook_list.append(splited_layer.layer.register_full_backward_pre_hook(create_bwd_pre_hook_ZO_grad(splited_layer.layer.ZO_grad_output, DEBUG)))
+                #     outputs, loss = obj_fn()
+                #     loss.backward()
+                    
+                #     for bwd_pre_hook in bwd_pre_hook_list:
+                #         bwd_pre_hook.remove()
         
         else:
             loss = model(**batch).loss
@@ -630,6 +685,12 @@ def main(args):
 
         if global_step % args.gradient_accumulation != 0:
             continue
+            
+        ### scale ZO grad by gradient_accumulation
+        if ZO_Estim is not None:
+            for param in model.parameters():
+                if param.grad is not None:
+                    param.grad = param.grad / args.gradient_accumulation
             
         ### logger.info param FO ZO grad
         if DEBUG:
@@ -660,6 +721,9 @@ def main(args):
             
             logger.info('done')
             import sys
+            
+            if dist.is_initialized():
+                dist.destroy_process_group()
             sys.exit(0)
 
         #######

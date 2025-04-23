@@ -1,6 +1,6 @@
 name: ZO_Estim_MC
-sigma: 0.01
-n_sample: 100
+sigma: 0.1
+n_sample: 1000
 signsgd: false
 
 scale: null
@@ -11,6 +11,7 @@ scale: null
 ZO_trainable_layers_list: ['GCPBertSubLayer1', 'GCPBertSubLayer2', 'GCPBertSubLayer3', 'GCPBertSubLayer4', 'GCPBertSubLayer5']
 
 estimate_method: forward
+# sample_method: gaussian
 sample_method: bernoulli
 
 quantized: false

@@ -66,17 +66,22 @@ class ColaLayer(nn.Module):
             
             if seed is not None:
                 torch.manual_seed(seed)
-            perturbation = rand_gen_fn(output.shape).to(output.dtype)
+            u = rand_gen_fn(output.shape).to(output.dtype)
+            
+            # power law scaling, sigma = C j^{-1/2}, u = sigma * e
+            # scale = torch.arange(1, u.size(1)).pow(-0.5)
+            # scale = torch.cat([torch.tensor([1.0]), scale]).to(output.dtype).to(output.device)
+            # u *= scale.reshape(1, -1, 1)
             
             # torch.set_rng_state(state)
             
             if mask is not None:
-                perturbation *= mask
+                u *= mask
                 
             # module.perturbation = perturbation
             
             # output += sigma * perturbation
-            return output + sigma * perturbation
+            return output + sigma * u
         return fwd_hook
       
     def create_fwd_hook_assign_grad(self, seed_list, scale_factor_list, rand_gen_fn, mask=None):
@@ -90,6 +95,12 @@ class ColaLayer(nn.Module):
             for i, (seed, scale_factor) in enumerate(zip(seed_list, scale_factor_list)):
                 torch.manual_seed(seed)
                 u = rand_gen_fn(output.shape).to(output.dtype)
+                
+                # power law scaling, u / sigma^2 = e / sigma, sigma = C j^{-1/2}, C already in scale_factor
+                # scale = torch.arange(1, u.size(1)).pow(0.5)
+                # scale = torch.cat([torch.tensor([1.0]), scale]).to(output.dtype).to(output.device)
+                # u *= scale.reshape(1, -1, 1)
+                
                 if mask is not None:
                     u *= mask
                     
@@ -100,6 +111,8 @@ class ColaLayer(nn.Module):
                 ### accumulate
                 ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
 
+            module.ZO_grad_output = ZO_grad_output
+            
             # Retrieve the input, shape: [B, T, in_features]
             x = inputs[0]
             

@@ -28,11 +28,15 @@ class SplitedParam(nn.Module):
 def fwd_hook_save_value(module, input, output):
     module.in_value = input[0].detach().clone()
     module.out_value = output.detach().clone()
+    
+    return None
 
 def bwd_hook_save_grad(module, grad_input, grad_output):
     if grad_input[0] is not None:
         module.in_grad = grad_input[0].detach().clone()
     module.out_grad = grad_output[0].detach().clone()
+    
+    return None
 
 def default_create_fwd_hook_get_out_dimension():
     def fwd_hook(module, input, output):
