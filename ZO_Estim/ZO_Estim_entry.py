@@ -129,6 +129,32 @@ class ObjFnLM:
             shift_labels = shift_labels.to(logits.device)
             loss = nn.functional.cross_entropy(logits, shift_labels, ignore_index=-100, reduction='none').reshape(batch_sz, seq_len)
             # print('loss shape', loss.shape)
+        
+        # elif return_loss_reduction == 'one-token':
+        #     logits = output.logits.float()
+        #     labels = self.batch['labels']
+            
+        #     batch_sz = logits.size(0)
+        #     seq_len = logits.size(1)
+        #     vocab_size = logits.size(-1)
+
+        #     # original logits: [batch_sz, seq_len, vocab_size]
+        #     # original labels: [batch_sz, seq_len]
+
+        #     # Shift labels as before:
+        #     labels_padded   = nn.functional.pad(self.batch['labels'], (0, 1), value=-100)  # [batch_sz, seq_len+1]
+        #     shift_labels    = labels_padded[..., 1:]                                      # [batch_sz, seq_len]
+
+        #     # pick token i
+        #     i = 50
+        #     logits_i = output.logits[:, i, :].float()     # [batch_sz, vocab_size]
+        #     labels_i = shift_labels[:, i].to(logits_i.device)  # [batch_sz]
+
+        #     # compute only that token’s loss
+        #     loss = torch.nn.functional.cross_entropy(logits_i, labels_i,
+        #                             ignore_index=-100,
+        #                             reduction='mean')      # [batch_sz]
+        #     # or reduction='mean' to get a scalar
             
         return output, loss
 

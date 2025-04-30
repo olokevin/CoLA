@@ -516,11 +516,16 @@ def main(args):
     # TRAINING LOOP
     # ##############################
     
+    ### support grad_accum
     # DEBUG=False
     DEBUG=True
 
+    ### did not implement grad_accum
     OUT_GRAD_DEBUG=False
     # OUT_GRAD_DEBUG=True
+    
+    # GNS_DEBUG=False
+    GNS_DEBUG=True
 
     max_memory = torch.cuda.max_memory_allocated()
     if global_rank == 0:
@@ -553,10 +558,16 @@ def main(args):
             # with torch.no_grad():
             #     loss = model(**batch).loss
             
-            ### save param FO grad
             if DEBUG:
+                ### set up ZO
+                obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+                ZO_Estim.update_obj_fn(obj_fn)
+                
+                ### save param FO grad
                 model.train()
-                loss = model(**batch).loss
+                # loss = model(**batch).loss
+                outputs, loss = obj_fn()
+                
                 scaled_loss = loss / args.gradient_accumulation
                 scaled_loss.backward()
                 
@@ -575,10 +586,6 @@ def main(args):
                 optimizer.zero_grad()
             
                 ### ZO grad estimation
-                obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
-                ZO_Estim.update_obj_fn(obj_fn)
-                
-                ### set dropout to eval mode
                 model.eval()
                 outputs, loss = ZO_Estim.estimate_grad()
 
@@ -593,11 +600,11 @@ def main(args):
                 optimizer.zero_grad()
                 
             elif OUT_GRAD_DEBUG:
+                obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
+                ZO_Estim.update_obj_fn(obj_fn)
+                
                 ### ZO grad estimation
-                if batch_idx % 1000 == 0:
-                    obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
-                    ZO_Estim.update_obj_fn(obj_fn)
-                    
+                if batch_idx % 100 == 0:
                     ### set dropout to eval mode
                     model.eval()
                     outputs, loss = ZO_Estim.estimate_grad()
@@ -614,11 +621,12 @@ def main(args):
                 
                 model.train()
                 loss = model(**batch).loss
+                # outputs, loss = obj_fn('one-token')
                 scaled_loss = loss / args.gradient_accumulation
                 scaled_loss.backward()
                 
                 ### save statistics
-                if batch_idx % 1000 == 0:
+                if batch_idx % 100 == 0:
                     dir_path = f'test/{ZO_Estim.n_sample}/{os.getpid()}/{batch_idx}'
                     os.makedirs(dir_path, exist_ok=True)
                     for splited_layer in ZO_Estim.splited_layer_list:

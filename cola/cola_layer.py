@@ -56,7 +56,7 @@ class ColaLayer(nn.Module):
 
         return out
     
-    def create_fwd_hook_add_perturbation(self, seed, sigma, rand_gen_fn, mask=None):
+    def create_fwd_hook_add_perturbation(self, seed, sigma, rand_gen_fn, mask=None, token_idx=None):
         def fwd_hook(module, input, output):
             # input is a tuple
             # module.in_value = input[0].detach().clone()
@@ -66,17 +66,32 @@ class ColaLayer(nn.Module):
             
             if seed is not None:
                 torch.manual_seed(seed)
-            u = rand_gen_fn(output.shape).to(output.dtype)
+                
+            ### independent perturbation for all tokens
+            # u = rand_gen_fn(output.shape).to(output.dtype)
             
-            # power law scaling, sigma = C j^{-1/2}, u = sigma * e
-            # scale = torch.arange(1, u.size(1)).pow(-0.5)
-            # scale = torch.cat([torch.tensor([1.0]), scale]).to(output.dtype).to(output.device)
+            ### shared perturbation within a sequence
+            u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
+            u = u.unsqueeze(1).expand(-1, output.size(1), -1)
+            
+            ### LRT
+            # u = 
+            
+            ### power law scaling, sigma = C j^{-1/2}, u = sigma * e
+            # scale = torch.arange(1, u.size(1)+1).pow(-0.1).to(output.dtype).to(output.device)
             # u *= scale.reshape(1, -1, 1)
             
             # torch.set_rng_state(state)
             
+            if token_idx is not None: 
+                u_mask = torch.zeros_like(u)
+                u_mask[:, token_idx, :] = 1
+                u = u * u_mask
+            
             if mask is not None:
-                u *= mask
+                u = u * mask
+            
+            # print(f'u tokenwise norm {u.norm(dim=(0,2))}')
                 
             # module.perturbation = perturbation
             
@@ -84,7 +99,7 @@ class ColaLayer(nn.Module):
             return output + sigma * u
         return fwd_hook
       
-    def create_fwd_hook_assign_grad(self, seed_list, scale_factor_list, rand_gen_fn, mask=None):
+    def create_fwd_hook_assign_grad(self, seed_list, scale_factor_list, rand_gen_fn, mask=None, token_idx=None):
         """
         Create a forward hook function that uses an externally provided
         estimation of the layer's output gradient (grad_output_estimate)
@@ -94,22 +109,48 @@ class ColaLayer(nn.Module):
             ### retrieve ZO_grad_output
             for i, (seed, scale_factor) in enumerate(zip(seed_list, scale_factor_list)):
                 torch.manual_seed(seed)
-                u = rand_gen_fn(output.shape).to(output.dtype)
                 
-                # power law scaling, u / sigma^2 = e / sigma, sigma = C j^{-1/2}, C already in scale_factor
-                # scale = torch.arange(1, u.size(1)).pow(0.5)
-                # scale = torch.cat([torch.tensor([1.0]), scale]).to(output.dtype).to(output.device)
+                ### independent perturbation for all tokens
+                # u = rand_gen_fn(output.shape).to(output.dtype)
+                
+                ### shared perturbation within a sequence
+                u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
+                u = u.unsqueeze(1).expand(-1, output.size(1), -1)
+                
+                ### LRT
+                
+                ### power law scaling, u / sigma^2 = e / sigma, sigma = C j^{-1/2}, C already in scale_factor
+                # scale = torch.arange(1, u.size(1)+1).pow(0.1).to(output.dtype).to(output.device)
                 # u *= scale.reshape(1, -1, 1)
                 
+                if token_idx is not None: 
+                    u_mask = torch.zeros_like(u)
+                    u_mask[:, token_idx, :] = 1
+                    u = u * u_mask
+                
                 if mask is not None:
-                    u *= mask
+                    u = u * mask
                     
                 ### init
                 if i == 0:
                     ZO_grad_output = torch.zeros_like(u)
                     
-                ### accumulate
+                ### loss i only for token i
                 ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
+                
+                ### loss i only for token 0~i-1 -> grad of token i accumulates loss i to S-1
+                # # 1) compute the suffix‐sum of scale_factor over the seq dimension
+                # suffix_sum = (
+                #     scale_factor
+                #     .flip(dims=[1])           # reverse seq axis -> [bz, seq]
+                #     .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
+                #     .flip(dims=[1])           # flip back -> [bz, seq]
+                # )
+
+                # # 2) broadcast that into the hidden dim and multiply
+                # ZO_grad_output += u * suffix_sum.unsqueeze(-1)  # -> [bz, seq, hidden]
+            
+            # print(f'ZO_grad_output tokenwise norm {ZO_grad_output.norm(dim=(0,2))}')
 
             module.ZO_grad_output = ZO_grad_output
             

@@ -1,6 +1,6 @@
 name: ZO_Estim_MC
-sigma: 0.1
-n_sample: 1000
+sigma: 0.01
+n_sample: 10
 signsgd: false
 
 scale: null
@@ -17,6 +17,8 @@ sample_method: bernoulli
 quantized: false
 normalize_perturbation: false
 en_param_commit: false
+
+### trainable covariance ###
 
 ##### modelwise weight perturbation #####
 # actv_perturb_block_idx_list: null
