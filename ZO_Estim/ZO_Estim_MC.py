@@ -815,138 +815,142 @@ class ZO_Estim_MC(nn.Module):
         for fwd_hook in fwd_hook_list:
             fwd_hook.remove()
     
-    # def get_tokenwise_actv_ZO_gradient(self, block_in, old_loss_vec):
+    def get_tokenwise_actv_ZO_gradient(self, block_in, old_loss_vec):
 
-    #     ### Generate random perturbation with the same shape as the parameter
-    #     ### Add perturbation to the parameter
-    #     ### Estimate gradient
+        ### Generate random perturbation with the same shape as the parameter
+        ### Add perturbation to the parameter
+        ### Estimate gradient
         
-    #     if 'LM' in self.obj_fn_type:
-    #         batch_sz = torch.numel(old_loss_vec)
-    #         actv_dim = self.ZO_dimension / old_loss_vec.size(1)
-    #     else:
-    #         batch_sz = len(old_loss_vec)
-    #         actv_dim = self.ZO_dimension
+        if 'LM' in self.obj_fn_type:
+            batch_sz = torch.numel(old_loss_vec)
+            actv_dim = self.ZO_dimension / old_loss_vec.size(1)
+        else:
+            batch_sz = len(old_loss_vec)
+            actv_dim = self.ZO_dimension
             
-    #     if self.sample_method == 'coord_basis':
-    #         raise NotImplementedError
-    #         # actv_dim = np.prod(post_actv_shape[1:])
-    #         # feature_shape = post_actv_shape[1:]
-    #         # n_sample = actv_dim
-    #     else:
-    #         n_sample = self.n_sample 
+        if self.sample_method == 'coord_basis':
+            raise NotImplementedError
+            # actv_dim = np.prod(post_actv_shape[1:])
+            # feature_shape = post_actv_shape[1:]
+            # n_sample = actv_dim
+        else:
+            n_sample = self.n_sample 
         
-    #     ### scaling factor
-    #     if self.sample_method == 'coord_basis':
-    #         scaling_factor = (1 / batch_sz)
-    #     else:
-    #         scaling_factor = (1 / self.n_sample / batch_sz)
+        ### scaling factor
+        if self.sample_method == 'coord_basis':
+            scaling_factor = (1 / batch_sz)
+        else:
+            scaling_factor = (1 / self.n_sample / batch_sz)
 
-    #     ### No scaling
-    #     if self.scale is None:
-    #         pass
-    #     elif self.scale == 'sqrt_dim':
-    #         scaling_factor *= math.sqrt(batch_sz*n_sample / (batch_sz*n_sample+actv_dim-1))
-    #     elif self.scale == 'dim':
-    #         scaling_factor *= (batch_sz*n_sample / (batch_sz*n_sample+actv_dim-1))     
+        ### No scaling
+        if self.scale is None:
+            pass
+        elif self.scale == 'sqrt_dim':
+            scaling_factor *= math.sqrt(batch_sz*n_sample / (batch_sz*n_sample+actv_dim-1))
+        elif self.scale == 'dim':
+            scaling_factor *= (batch_sz*n_sample / (batch_sz*n_sample+actv_dim-1))     
         
-    #     seq_len = old_loss_vec.size(1)
-    #     for token_idx in range(seq_len):
+        seq_len = old_loss_vec.size(1)
+        for token_idx in range(seq_len):
             
-    #         ### assign seed to each layer
-    #         for splited_layer in self.splited_layer_list:
-    #             splited_layer.seed_list = torch.randint(0, 100000, (n_sample,)).tolist()
-    #             splited_layer.scale_factor_list = []
-            
-    #         ### Perturbed forwards
-    #         for i in range(n_sample):
-    #             fwd_hook_handle_list = []
-    #             ### Add perturbation to all activations
-    #             for splited_layer in self.splited_layer_list:
-    #                 create_fwd_hook_add_perturbation = getattr(splited_layer.layer, 'create_fwd_hook_add_perturbation', default_create_fwd_hook_add_perturbation)
-    #                 # fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(u*self.sigma)
-    #                 fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(
-    #                         seed=splited_layer.seed_list[i], 
-    #                         sigma=self.sigma, 
-    #                         rand_gen_fn=self.rand_gen_fn,
-    #                         mask=None,
-    #                         token_idx=token_idx
-    #                     )
-    #                 fwd_hook_handle = splited_layer.layer.register_forward_hook(fwd_hook_add_perturbation)
-    #                 fwd_hook_handle_list.append(fwd_hook_handle)
-
-    #             if self.en_partial_forward:
-    #                 _, pos_loss = self.obj_fn(starting_idx=splited_layer.idx, input=block_in, return_loss_reduction='none')
-    #             else:
-    #                 _, pos_loss = self.obj_fn(return_loss_reduction='none')
+            ### assign seed to each layer
+            for splited_layer in self.splited_layer_list:
+                splited_layer.seed_list = torch.randint(0, 100000, (n_sample,)).tolist()
+                splited_layer.scale_factor_list = []
                 
-    #             for fwd_hook_handle in fwd_hook_handle_list:    
-    #                 fwd_hook_handle.remove()
-                    
-    #             self.forward_counter += 1
+                # print(f'{splited_layer.name} {splited_layer.seed_list}')
+            
+            ### Perturbed forwards
+            for i in range(n_sample):
+                fwd_hook_handle_list = []
+                ### Add perturbation to all activations
+                for splited_layer in self.splited_layer_list:
+                    create_fwd_hook_add_perturbation = getattr(splited_layer.layer, 'create_fwd_hook_add_perturbation', default_create_fwd_hook_add_perturbation)
+                    # fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(u*self.sigma)
+                    fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(
+                            seed=splited_layer.seed_list[i], 
+                            sigma=self.sigma, 
+                            rand_gen_fn=self.rand_gen_fn,
+                            mask=None,
+                            # token_idx=token_idx
+                        )
+                    fwd_hook_handle = splited_layer.layer.register_forward_hook(fwd_hook_add_perturbation)
+                    fwd_hook_handle_list.append(fwd_hook_handle)
 
-    #             if self.estimate_method == 'forward':
-    #                 loss_diff = pos_loss - old_loss_vec
-    #                 temp = torch.zeros_like(loss_diff)
-    #                 temp[:, token_idx] = loss_diff[:, token_idx]
-    #                 loss_diff = temp
-
-    #             elif self.estimate_method == 'antithetic':
-    #                 fwd_hook_handle_list = []
-    #                 ### Add perturbation to the parameter
-    #                 for splited_layer in self.splited_layer_list:
-    #                     # splited_layer.layer.en_perturb_forward( - u * self.sigma)
-    #                     create_fwd_hook_add_perturbation = getattr(splited_layer.layer, 'create_fwd_hook_add_perturbation', default_create_fwd_hook_add_perturbation)
-    #                     # fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(- u * self.sigma)
-    #                     fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(
-    #                         seed=splited_layer.seed_list[i], 
-    #                         sigma=-self.sigma, 
-    #                         rand_gen_fn=self.rand_gen_fn,
-    #                         mask=None,
-    #                         token_idx=token_idx
-    #                     )
-    #                     fwd_hook_handle = splited_layer.layer.register_forward_hook(fwd_hook_add_perturbation)
-    #                     fwd_hook_handle_list.append(fwd_hook_handle)
-
-    #                 if self.en_partial_forward:
-    #                     _, neg_loss = self.obj_fn(starting_idx=splited_layer.idx, input=block_in, return_loss_reduction='none')
-    #                 else:
-    #                     _, neg_loss = self.obj_fn(return_loss_reduction='none')
-
-    #                 for fwd_hook_handle in fwd_hook_handle_list:    
-    #                     fwd_hook_handle.remove()
-                    
-    #                 self.forward_counter += 1
-                    
-    #                 loss_diff = (pos_loss - neg_loss) / 2.0
-                    
-    #                 temp = torch.zeros_like(loss_diff)
-    #                 temp[:, token_idx] = loss_diff[:, token_idx]
-    #                 loss_diff = temp
+                if self.en_partial_forward:
+                    _, pos_loss = self.obj_fn(starting_idx=splited_layer.idx, input=block_in, return_loss_reduction='none')
+                else:
+                    _, pos_loss = self.obj_fn(return_loss_reduction='none')
                 
-    #             for splited_layer in self.splited_layer_list:
-    #                 splited_layer.scale_factor_list.append(scaling_factor * loss_diff / self.sigma)
+                for fwd_hook_handle in fwd_hook_handle_list:    
+                    fwd_hook_handle.remove()
+                    
+                self.forward_counter += 1
 
-    #         ### Apply estimated gradient
-    #         fwd_hook_list = []
-    #         for splited_layer in self.splited_layer_list:
-    #             if splited_layer.mode == 'actv':
-    #                 create_fwd_hook_assign_grad = getattr(splited_layer.layer, 'create_fwd_hook_assign_grad', None)
-    #                 if create_fwd_hook_assign_grad is None:
-    #                     print(f'skip {splited_layer.name}')
-    #                 else:
-    #                     fwd_hook_list.append(splited_layer.layer.register_forward_hook(create_fwd_hook_assign_grad(
-    #                         seed_list=splited_layer.seed_list,
-    #                         scale_factor_list=splited_layer.scale_factor_list,
-    #                         rand_gen_fn=self.rand_gen_fn,
-    #                         mask=None,
-    #                         token_idx=token_idx
-    #                     )))
+                if self.estimate_method == 'forward':
+                    loss_diff = pos_loss - old_loss_vec
+                    temp = torch.zeros_like(loss_diff)
+                    temp[:, token_idx] = loss_diff[:, token_idx]
+                    # loss_diff = temp
+                    loss_diff = temp / (token_idx + 1)
+
+                elif self.estimate_method == 'antithetic':
+                    fwd_hook_handle_list = []
+                    ### Add perturbation to the parameter
+                    for splited_layer in self.splited_layer_list:
+                        # splited_layer.layer.en_perturb_forward( - u * self.sigma)
+                        create_fwd_hook_add_perturbation = getattr(splited_layer.layer, 'create_fwd_hook_add_perturbation', default_create_fwd_hook_add_perturbation)
+                        # fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(- u * self.sigma)
+                        fwd_hook_add_perturbation = create_fwd_hook_add_perturbation(
+                            seed=splited_layer.seed_list[i], 
+                            sigma=-self.sigma, 
+                            rand_gen_fn=self.rand_gen_fn,
+                            mask=None,
+                            # token_idx=token_idx
+                        )
+                        fwd_hook_handle = splited_layer.layer.register_forward_hook(fwd_hook_add_perturbation)
+                        fwd_hook_handle_list.append(fwd_hook_handle)
+
+                    if self.en_partial_forward:
+                        _, neg_loss = self.obj_fn(starting_idx=splited_layer.idx, input=block_in, return_loss_reduction='none')
+                    else:
+                        _, neg_loss = self.obj_fn(return_loss_reduction='none')
+
+                    for fwd_hook_handle in fwd_hook_handle_list:    
+                        fwd_hook_handle.remove()
+                    
+                    self.forward_counter += 1
+                    
+                    loss_diff = (pos_loss - neg_loss) / 2.0
+                    
+                    temp = torch.zeros_like(loss_diff)
+                    temp[:, token_idx] = loss_diff[:, token_idx]
+                    # loss_diff = temp
+                    loss_diff = temp / (token_idx + 1)
+                
+                for splited_layer in self.splited_layer_list:
+                    splited_layer.scale_factor_list.append(scaling_factor * loss_diff / self.sigma)
+
+            ### Apply estimated gradient
+            fwd_hook_list = []
+            for splited_layer in self.splited_layer_list:
+                if splited_layer.mode == 'actv':
+                    create_fwd_hook_assign_grad = getattr(splited_layer.layer, 'create_fwd_hook_assign_grad', None)
+                    if create_fwd_hook_assign_grad is None:
+                        print(f'skip {splited_layer.name}')
+                    else:
+                        fwd_hook_list.append(splited_layer.layer.register_forward_hook(create_fwd_hook_assign_grad(
+                            seed_list=splited_layer.seed_list,
+                            scale_factor_list=splited_layer.scale_factor_list,
+                            rand_gen_fn=self.rand_gen_fn,
+                            mask=None,
+                            token_idx=token_idx
+                        )))
             
-    #         outputs, loss = self.obj_fn()
+            outputs, loss = self.obj_fn()
             
-    #         for fwd_hook in fwd_hook_list:
-    #             fwd_hook.remove()
+            for fwd_hook in fwd_hook_list:
+                fwd_hook.remove()
     
     ##################
     # Pseudo ZO

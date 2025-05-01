@@ -136,19 +136,24 @@ class ColaLayer(nn.Module):
                     ZO_grad_output = torch.zeros_like(u)
                     
                 ### loss i only for token i
-                ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
+                # ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
                 
                 ### loss i only for token 0~i-1 -> grad of token i accumulates loss i to S-1
-                # # 1) compute the suffix‐sum of scale_factor over the seq dimension
-                # suffix_sum = (
-                #     scale_factor
-                #     .flip(dims=[1])           # reverse seq axis -> [bz, seq]
-                #     .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
-                #     .flip(dims=[1])           # flip back -> [bz, seq]
-                # )
+                token_scale = 1 / torch.arange(1, u.size(1)+1).to(u.dtype).to(u.device)
+                token_scale = token_scale.unsqueeze(0)
+                
+                # token_scale = 1
+                
+                # 1) compute the suffix‐sum of scale_factor over the seq dimension
+                suffix_sum = (
+                    scale_factor * token_scale
+                    .flip(dims=[1])           # reverse seq axis -> [bz, seq]
+                    .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
+                    .flip(dims=[1])           # flip back -> [bz, seq]
+                )
 
-                # # 2) broadcast that into the hidden dim and multiply
-                # ZO_grad_output += u * suffix_sum.unsqueeze(-1)  # -> [bz, seq, hidden]
+                # 2) broadcast that into the hidden dim and multiply
+                ZO_grad_output += u * suffix_sum.unsqueeze(-1)  # -> [bz, seq, hidden]
             
             # print(f'ZO_grad_output tokenwise norm {ZO_grad_output.norm(dim=(0,2))}')
 
@@ -212,6 +217,24 @@ class ColaLayer(nn.Module):
                     module.bias.grad = grad_bias
                 else:
                     module.bias.grad += grad_bias
+            
+            # === Compute per-example gradients ===
+            # For cola_a: [B, in_features, rank]
+            per_example_grad_cola_a = torch.einsum('bti,btr->bir', x, grad_h)
+            # For cola_b: [B, rank, out_features]
+            per_example_grad_cola_b = torch.einsum('btr,bto->bro', h_act, grad_out)
+            # For bias: [B, out_features]
+            per_example_grad_bias = grad_out.sum(dim=1) if module.bias is not None else None
+            
+            # Flatten and concatenate per-example gradients
+            per_example_grads = []
+            per_example_grads.append(per_example_grad_cola_a.reshape(per_example_grad_cola_a.size(0), -1))
+            per_example_grads.append(per_example_grad_cola_b.reshape(per_example_grad_cola_b.size(0), -1))
+            if per_example_grad_bias is not None:
+                per_example_grads.append(per_example_grad_bias)
+            
+            # Save flattened per-example gradients to module
+            module.per_example_grads = torch.cat(per_example_grads, dim=1)  # shape: [B, D]
 
             # Return the unchanged output.
             return output

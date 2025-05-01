@@ -1,6 +1,6 @@
 name: ZO_Estim_MC
 sigma: 0.01
-n_sample: 10
+n_sample: 1000
 signsgd: false
 
 scale: null

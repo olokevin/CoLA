@@ -24,6 +24,7 @@ from pretraining_utils.dataloader import PreprocessedIterableDataset
 from cola import ColaConfig, ColaForCausalLM, ColaMForCausalLM
 import datetime, pdb, pickle
 from torch.profiler import profile, ProfilerActivity
+from cola.cola_layer import ColaLayer, ColaMDownProjLayer, ColaMUpProjLayer
 
 transformers.logging.set_verbosity_error()
 
@@ -182,6 +183,46 @@ def evaluate_model(
     total_loss = sum([t.item() for t in gathered_losses]) / world_size
 
     return total_loss, evaluated_on_tokens
+
+def collect_gradient_noise_scale(model):
+    """
+    Compute the gradient noise scale (B) from per-example gradients of all Cola layers.
+    
+    Args:
+        model: The model containing Cola layers
+        
+    Returns:
+        B: The gradient noise scale
+    """
+    # Collect all per-example gradients from Cola layers
+    all_per_example_grads = []
+    for module in model.modules():
+        if isinstance(module, (ColaLayer, ColaMDownProjLayer, ColaMUpProjLayer)):
+            if hasattr(module, 'per_example_grads'):
+                all_per_example_grads.append(module.per_example_grads)
+    
+    if not all_per_example_grads:
+        raise ValueError("No per-example gradients found in the model")
+        
+    # Concatenate all per-example gradients along the parameter dimension
+    # Shape: [B, D_total] where D_total is sum of all layer parameters
+    combined_grads = torch.cat(all_per_example_grads, dim=1)
+    
+    # Compute B = (sum_i ||g_i||^2) / (sum_i ||g_i||)^2
+    # where g_i is the gradient of the i-th example
+    # grad_norms = torch.norm(combined_grads, dim=1)  # [B]
+    # B = (grad_norms.pow(2).sum()) / (grad_norms.sum().pow(2))
+    
+    # 10) compute B_simple = tr(var)/||mean||^2
+    G = combined_grads
+    G_mean = G.mean(0)                        
+    var    = G.var(0, unbiased=True)          
+    tr_S   = var.sum()                        
+    norm2  = G_mean.dot(G_mean).clamp_min(1e-12)
+
+    B = (tr_S / norm2).item()
+    
+    return B
 
 def main(args):
     torch.manual_seed(args.seed)
@@ -432,7 +473,7 @@ def main(args):
     # ================== Trainable params ======================
     # for name, param in model.named_parameters():
     #     if "cola_" in name:
-    #         if 'layer.0' in name:
+    #         if 'layers.0' in name:
     #             param.requires_grad = True
     #         else:
     #             param.requires_grad = False
@@ -517,15 +558,15 @@ def main(args):
     # ##############################
     
     ### support grad_accum
-    # DEBUG=False
-    DEBUG=True
-
+    DEBUG=False
+    # DEBUG=True
+    
     ### did not implement grad_accum
     OUT_GRAD_DEBUG=False
     # OUT_GRAD_DEBUG=True
     
-    # GNS_DEBUG=False
-    GNS_DEBUG=True
+    GNS_DEBUG=False
+    # GNS_DEBUG=True
 
     max_memory = torch.cuda.max_memory_allocated()
     if global_rank == 0:
@@ -645,6 +686,67 @@ def main(args):
                     for hook in hook_list:
                         hook.remove()
             
+            elif GNS_DEBUG:
+                eps = 1e-12
+                ### FO GNS
+                from backpack import backpack, extend
+                from backpack.extensions import BatchGrad
+
+                # 1) only extend the model (no loss–extension needed)
+                model = extend(model)
+
+                # 2) forward
+                output  = model(**batch)           # expects batch["input_ids"], etc.
+                logits  = output.logits.float()    # [B, S, V]
+                labels  = batch["labels"]          # [B, S]
+
+                # 3) shift tokens
+                labels = F.pad(labels, (0, 1), value=-100)  # [B, S+1]
+                shift_labels = labels[:, 1:].contiguous()   # [B, S]
+
+                B, S, V = logits.size()
+
+                # 4) flatten for NLL
+                flat_logits = logits.view(-1, V)           # [B*S, V]
+                flat_labels = shift_labels.view(-1)        # [B*S]
+
+                # 5) compute per-token negative log‐probabilities
+                log_probs = F.log_softmax(flat_logits, dim=-1)  
+                # gather the log-prob at the correct token; for ignored indices we'll clamp to 0 later
+                idx = flat_labels.clamp(min=0)              
+                nll  = -log_probs[torch.arange(B*S, device=idx.device), idx]  # [B*S]
+
+                # 6) mask out the ignored positions
+                mask = (flat_labels != -100).float()        # [B*S]
+                per_tok = nll * mask                       # zeros where label == -100
+
+                # 7) reshape & sum over the seq‐length → one scalar loss per example
+                per_token_loss   = per_tok.view(B, S)       # [B, S]
+                loss_per_example = per_token_loss.sum(dim=1)  # [B]
+
+                # 8) backward with Backpack to populate p.grad_batch
+                optimizer.zero_grad()
+                with backpack(BatchGrad()):
+                    # backward on the *mean* still populates grad_batch for each example
+                    loss_per_example.mean().backward()
+
+                # 9) collect per-sample grads into a [B, D] matrix
+                per_sample_flat = []
+                for p in model.parameters():
+                    # p.grad_batch is [B, *p.shape]
+                    gb = p.grad_batch.reshape(B, -1)  
+                    per_sample_flat.append(gb)
+                G = torch.cat(per_sample_flat, dim=1)  # [B, D]
+
+                # 10) compute B_simple = tr(var)/||mean||^2
+                G_mean = G.mean(0)                        
+                var    = G.var(0, unbiased=True)          
+                tr_S   = var.sum()                        
+                norm2  = G_mean.dot(G_mean).clamp_min(1e-12)
+
+                FO_GNS = (tr_S / norm2).item()
+                print("FO_GNS:", FO_GNS)
+              
             else:
                 ### ZO grad estimation
                 obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=batch)
@@ -711,6 +813,10 @@ def main(args):
             logger.info(f'Modelwise cosine similarity: {cos_sim}')
             logger.info(f'Modelwise norm ZO/FO {torch.linalg.norm(grad_ZO) / torch.linalg.norm(grad_FO)}')
             logger.info(f'sign match ratio {sign_match_ratio}')
+            
+            ### per-example grad
+            ZO_GNS = collect_gradient_noise_scale(model)
+            logger.info(f'ZO Gradient noise scale: {ZO_GNS}')
             
             # logger.info('param cos sim')
             # for name, param in model.named_parameters():
