@@ -8,8 +8,8 @@ CONFIG_NAME=${CONFIG_NAME:-"cola_60m"}
 LR=${LR:-"0.006"}
 WD=${WD:-"0.01"}
 GC=${GC:-"0.5"}
-BZ=${BZ:-"32"}
-TBZ=${TBZ:-"64"}
+BZ=${BZ:-"320"}
+TBZ=${TBZ:-"6400"}
 CONTINUE=${CONTINUE:-"none"}
 if [ "${CONTINUE}" != "none" ]; then
     readonly continue_from_flag="--continue_from=$CONTINUE"

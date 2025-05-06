@@ -68,11 +68,11 @@ class ColaLayer(nn.Module):
                 torch.manual_seed(seed)
                 
             ### independent perturbation for all tokens
-            # u = rand_gen_fn(output.shape).to(output.dtype)
+            u = rand_gen_fn(output.shape).to(output.dtype)
             
             ### shared perturbation within a sequence
-            u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
-            u = u.unsqueeze(1).expand(-1, output.size(1), -1)
+            # u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
+            # u = u.unsqueeze(1).expand(-1, output.size(1), -1)
             
             ### LRT
             # u = 
@@ -111,11 +111,11 @@ class ColaLayer(nn.Module):
                 torch.manual_seed(seed)
                 
                 ### independent perturbation for all tokens
-                # u = rand_gen_fn(output.shape).to(output.dtype)
+                u = rand_gen_fn(output.shape).to(output.dtype)
                 
                 ### shared perturbation within a sequence
-                u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
-                u = u.unsqueeze(1).expand(-1, output.size(1), -1)
+                # u = rand_gen_fn((output.size(0), output.size(-1))).to(output.dtype)
+                # u = u.unsqueeze(1).expand(-1, output.size(1), -1)
                 
                 ### LRT
                 
@@ -135,25 +135,34 @@ class ColaLayer(nn.Module):
                 if i == 0:
                     ZO_grad_output = torch.zeros_like(u)
                     
-                ### loss i only for token i
-                # ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
+                ### ======= loss i only for token i =======
+                ZO_grad_output += torch.einsum('bs,bsd->bsd', (scale_factor, u)).to(u.dtype) 
                 
-                ### loss i only for token 0~i-1 -> grad of token i accumulates loss i to S-1
-                token_scale = 1 / torch.arange(1, u.size(1)+1).to(u.dtype).to(u.device)
-                token_scale = token_scale.unsqueeze(0)
+                ### ======= loss i only for token 0~i-1 -> grad of token i accumulates loss i to S-1 =======
+                # token_scale = 1 / torch.arange(1, u.size(1)+1).to(u.dtype).to(u.device)
+                # token_scale = token_scale.unsqueeze(0)
                 
-                # token_scale = 1
+                # # token_scale = 1
                 
-                # 1) compute the suffix‐sum of scale_factor over the seq dimension
-                suffix_sum = (
-                    scale_factor * token_scale
-                    .flip(dims=[1])           # reverse seq axis -> [bz, seq]
-                    .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
-                    .flip(dims=[1])           # flip back -> [bz, seq]
-                )
+                # # 1) compute the suffix‐sum of scale_factor over the seq dimension
+                # scale_factor = scale_factor * token_scale
+                # suffix_sum = (
+                #     scale_factor
+                #     .flip(dims=[1])           # reverse seq axis -> [bz, seq]
+                #     .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
+                #     .flip(dims=[1])           # flip back -> [bz, seq]
+                # )
+                
+                # ### old
+                # # suffix_sum = (
+                # #     scale_factor * token_scale
+                # #     .flip(dims=[1])           # reverse seq axis -> [bz, seq]
+                # #     .cumsum(dim=1)            # prefix‐cumsum on reversed -> [bz, seq]
+                # #     .flip(dims=[1])           # flip back -> [bz, seq]
+                # # )
 
-                # 2) broadcast that into the hidden dim and multiply
-                ZO_grad_output += u * suffix_sum.unsqueeze(-1)  # -> [bz, seq, hidden]
+                # # 2) broadcast that into the hidden dim and multiply
+                # ZO_grad_output += u * suffix_sum.unsqueeze(-1)  # -> [bz, seq, hidden]
             
             # print(f'ZO_grad_output tokenwise norm {ZO_grad_output.norm(dim=(0,2))}')
 

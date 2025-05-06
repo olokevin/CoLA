@@ -565,8 +565,8 @@ def main(args):
     OUT_GRAD_DEBUG=False
     # OUT_GRAD_DEBUG=True
     
-    GNS_DEBUG=False
-    # GNS_DEBUG=True
+    # GNS_DEBUG=False
+    GNS_DEBUG=True
 
     max_memory = torch.cuda.max_memory_allocated()
     if global_rank == 0:
@@ -687,65 +687,84 @@ def main(args):
                         hook.remove()
             
             elif GNS_DEBUG:
-                eps = 1e-12
-                ### FO GNS
-                from backpack import backpack, extend
-                from backpack.extensions import BatchGrad
-
-                # 1) only extend the model (no loss–extension needed)
-                model = extend(model)
-
-                # 2) forward
-                output  = model(**batch)           # expects batch["input_ids"], etc.
-                logits  = output.logits.float()    # [B, S, V]
-                labels  = batch["labels"]          # [B, S]
-
-                # 3) shift tokens
-                labels = F.pad(labels, (0, 1), value=-100)  # [B, S+1]
-                shift_labels = labels[:, 1:].contiguous()   # [B, S]
-
-                B, S, V = logits.size()
-
-                # 4) flatten for NLL
-                flat_logits = logits.view(-1, V)           # [B*S, V]
-                flat_labels = shift_labels.view(-1)        # [B*S]
-
-                # 5) compute per-token negative log‐probabilities
-                log_probs = F.log_softmax(flat_logits, dim=-1)  
-                # gather the log-prob at the correct token; for ignored indices we'll clamp to 0 later
-                idx = flat_labels.clamp(min=0)              
-                nll  = -log_probs[torch.arange(B*S, device=idx.device), idx]  # [B*S]
-
-                # 6) mask out the ignored positions
-                mask = (flat_labels != -100).float()        # [B*S]
-                per_tok = nll * mask                       # zeros where label == -100
-
-                # 7) reshape & sum over the seq‐length → one scalar loss per example
-                per_token_loss   = per_tok.view(B, S)       # [B, S]
-                loss_per_example = per_token_loss.sum(dim=1)  # [B]
-
-                # 8) backward with Backpack to populate p.grad_batch
-                optimizer.zero_grad()
-                with backpack(BatchGrad()):
-                    # backward on the *mean* still populates grad_batch for each example
-                    loss_per_example.mean().backward()
-
-                # 9) collect per-sample grads into a [B, D] matrix
-                per_sample_flat = []
-                for p in model.parameters():
-                    # p.grad_batch is [B, *p.shape]
-                    gb = p.grad_batch.reshape(B, -1)  
-                    per_sample_flat.append(gb)
-                G = torch.cat(per_sample_flat, dim=1)  # [B, D]
-
-                # 10) compute B_simple = tr(var)/||mean||^2
-                G_mean = G.mean(0)                        
-                var    = G.var(0, unbiased=True)          
-                tr_S   = var.sum()                        
-                norm2  = G_mean.dot(G_mean).clamp_min(1e-12)
-
-                FO_GNS = (tr_S / norm2).item()
-                print("FO_GNS:", FO_GNS)
+                # Initialize running statistics
+                per_example_grad_norm = []
+                G_mean = None
+                G_var = None
+                n_samples = 0
+                
+                # Compute per-example gradients
+                for i in range(args.batch_size):
+                    optimizer.zero_grad()
+                    
+                    # Create single example batch
+                    single_batch = {k: v[i:i+1] for k, v in batch.items()}
+                    
+                    # ====== FO grad ======
+                    # Forward pass and loss computation
+                    loss = model(**single_batch).loss
+                    # loss = model(**single_batch).loss / args.gradient_accumulation
+                    # loss = model(**single_batch).loss / args.batch_size
+                    loss.backward()
+                    
+                    # ====== ZO grad ======
+                    # obj_fn = build_obj_fn(ZO_Estim.obj_fn_type, model=model, batch=single_batch)
+                    # ZO_Estim.update_obj_fn(obj_fn)
+                    # ZO_Estim.estimate_grad()
+                    
+                    # ### pseudo NP
+                    # if ZO_Estim.splited_layer_list is not None:
+                    #     bwd_pre_hook_list = []
+                    #     for splited_layer in ZO_Estim.splited_layer_list:
+                    #         if splited_layer.mode == 'actv':
+                    #             create_bwd_pre_hook_ZO_grad = getattr(splited_layer.layer, 'create_bwd_pre_hook_ZO_grad', default_create_bwd_pre_hook_ZO_grad)
+                    #             bwd_pre_hook_list.append(splited_layer.layer.register_full_backward_pre_hook(create_bwd_pre_hook_ZO_grad(splited_layer.layer.ZO_grad_output, DEBUG)))
+                    #     outputs, loss = obj_fn()
+                    #     loss.backward()
+                        
+                    #     for bwd_pre_hook in bwd_pre_hook_list:
+                    #         bwd_pre_hook.remove()
+                    # ====== end ZO grad ======
+                    
+                    # Collect gradients for this example
+                    example_grads = []
+                    for param in model.parameters():
+                        if param.grad is not None:
+                            example_grads.append(param.grad.view(-1))
+                    
+                    # Concatenate all gradients for this example
+                    g = torch.cat(example_grads)
+                    per_example_grad_norm.append(torch.norm(g).item())
+                    # Update running statistics
+                    n_samples += 1
+                    if G_mean is None:
+                        G_mean = g
+                        G_var = torch.zeros_like(g)
+                    else:
+                        # Welford's online algorithm for variance
+                        delta = g - G_mean
+                        G_mean += delta / n_samples
+                        G_var += delta * (g - G_mean)
+                
+                # Finalize variance calculation
+                # True per-example variance, not scaled by batch size
+                G_var = G_var / (n_samples - 1)  # Unbiased estimator
+                
+                # Compute gradient noise scale
+                tr_S = G_var.sum()  # Trace of covariance matrix
+                norm2 = G_mean.dot(G_mean).clamp_min(1e-12)  # Squared norm of mean gradient
+                B = (tr_S / norm2).item()
+                
+                if global_rank == 0:
+                    logger.info(f'Per-example grad norm: {per_example_grad_norm}')
+                    logger.info(f'Gradient noise scale (B): {B}')
+                    logger.info(f'Trace of covariance: {tr_S}')
+                    logger.info(f'Norm squared of mean gradient: {norm2}')
+                
+                import sys
+                if dist.is_initialized():
+                    dist.destroy_process_group()
+                sys.exit(0)
               
             else:
                 ### ZO grad estimation
